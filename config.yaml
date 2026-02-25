@@ -9,3 +9,10 @@ programs:
     min_runtime: 1
     max_relaunch_retry: 3
     signal_stopper: SIGKILL
+    time_after_proper_stop: 5
+    discard_options: Stdin
+    env_to_set: 
+      user: "maelegoy"
+      chien: "chat"
+    working_dir: "/home/"
+    umask: 777

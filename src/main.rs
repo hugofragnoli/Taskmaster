@@ -17,6 +17,14 @@ enum _Signalstopper {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+enum _Discardoptions {
+    Stdin,
+    Stdout,
+    Stderr,
+    FilePath,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 struct ProgramConfig {
     cmd: String,
     numprocs: u32,
@@ -27,7 +35,11 @@ struct ProgramConfig {
     min_runtime: u64,
     max_relaunch_retry: u32,
     signal_stopper: _Signalstopper,
-    
+    time_after_proper_stop: u64,
+    discard_options: _Discardoptions,
+    env_to_set: HashMap<String, String>,
+    working_dir: String,
+    umask: u32,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
