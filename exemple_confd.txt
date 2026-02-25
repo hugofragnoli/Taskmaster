@@ -17,3 +17,7 @@ serverurl=unix:///var/run/supervisor.sock
 
 [include]
 files = /etc/supervisor/conf.d/*.conf
+
+
+
+CE FICHIER SERA AU FORMAT YAML car facilitant pour serde (parse lib)
