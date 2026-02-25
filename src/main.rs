@@ -1,11 +1,45 @@
 use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
+use std::time::Duration;
+
+#[derive(Debug, Serialize, Deserialize)]
+enum _Restart {
+    Always,
+    Never,
+    Unexpectedexits,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+enum _Signalstopper {
+    SIGKILL,
+    SIGTERM,
+    SIGINT,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+enum _Discardoptions {
+    Stdin,
+    Stdout,
+    Stderr,
+    FilePath,
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 struct ProgramConfig {
     cmd: String,
     numprocs: u32,
     autostart: bool,
+    status: bool,
+    error_code: u32,
+    restart: _Restart,
+    min_runtime: u64,
+    max_relaunch_retry: u32,
+    signal_stopper: _Signalstopper,
+    time_after_proper_stop: u64,
+    discard_options: _Discardoptions,
+    env_to_set: HashMap<String, String>,
+    working_dir: String,
+    umask: u32,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -25,4 +59,3 @@ fn main() {
         println!("La commande à lancer est : {}", p.cmd);
     }
 }
- 

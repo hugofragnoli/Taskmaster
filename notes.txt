@@ -17,3 +17,7 @@ loop{
 
 Un vector dúne struct hashmap ca parait pas mal non ? 
 ca fait une string pour le nom du prog auquel est rattache toutes les infos presentes dans le .yaml.
+
+
+                        POur le temps :
+Std::time::Duration::from_secs(self.min_runtime)
