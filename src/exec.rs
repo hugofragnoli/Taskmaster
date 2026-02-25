@@ -1,11 +1,11 @@
 use std::{
 	fs::File,
-	io::Stderr,
 	process::{Command, Stdio},
 	thread::sleep,
 	time::Duration,
 };
 
+// redirige stdio du premier process dans stdin du second
 fn pipe_process() {
 	let ls = Command::new("ls")
 		.stdout(Stdio::piped())
@@ -27,6 +27,7 @@ fn pipe_process() {
 	println!("{}", String::from_utf8_lossy(cat_stdout.stdout.as_slice()));
 }
 
+// simule un programme long avec redirection d'output dans un fichier de log.
 fn redirect_to_file() {
 	let logfile = File::create("logfile.txt").expect("failed to open file");
 	let mut ping = Command::new("ping")
@@ -35,7 +36,7 @@ fn redirect_to_file() {
 		.spawn()
 		.expect("failed to start ping");
 
-	sleep(Duration::from_secs(5));
+	sleep(Duration::from_mins(2)); // sleep 2 minutes
 	ping.kill().expect("Failed to kill ping");
 }
 
