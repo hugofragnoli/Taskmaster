@@ -1,0 +1,5 @@
+programs:
+  my_ping:
+    cmd: "ping google.com"
+    numprocs: 1
+    autostart: true
