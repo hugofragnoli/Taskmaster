@@ -3,3 +3,9 @@ programs:
     cmd: "ping google.com"
     numprocs: 1
     autostart: true
+    status: true
+    error_code: 4
+    restart: Always
+    min_runtime: 1
+    max_relaunch_retry: 3
+    signal_stopper: SIGKILL
