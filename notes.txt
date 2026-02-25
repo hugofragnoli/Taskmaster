@@ -1,0 +1,7 @@
+Ok donc de ce que jai compris de std::child
+
+on lui dit au lancement, pendant le parsing : 
+let {liste des prog a lancer au demarrage} = Command::new("path vers le binaire ou lexecutable a lancer")
+    .arg("larg quon veut passer a notre commande")
+    .spawn() (donne vie au process -> demande a l os de creer une entree dans la table des process)
+    .expect("hihi oubli de push aye")
