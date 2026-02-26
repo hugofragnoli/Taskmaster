@@ -3,8 +3,10 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 mod exec;
+mod read_history;
 
 use exec::exec_and_monitor;
+use read_history::read_command;
 
 #[derive(Debug, Serialize, Deserialize)]
 enum _Restart {
@@ -62,6 +64,6 @@ fn main() {
 	// if let Some(p) = config.programs.get("my_ping") {
 	//     println!("La commande à lancer est : {}", p.cmd);
 	// }
-
-	exec_and_monitor();
+	read_command();
+	//exec_and_monitor();
 }
