@@ -12,7 +12,7 @@ programs:
     time_after_proper_stop: 5
     discard_options: Stdin
     env_to_set: 
-      user: "maelegoy"
+      user: "mael"
       chien: "chat"
     working_dir: "/home/"
     umask: 777
