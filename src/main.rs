@@ -60,7 +60,7 @@ fn main() {
 	// let deserialized: TaskmasterConfig = serde_yaml::from_str(&serialized).unwrap();
 	// println!("deserialized = {:#?}", deserialized);
 	// if let Some(p) = config.programs.get("my_ping") {
-	//     println!("La commande à lancer est : {}", p.cmd);
+	// 	println!("La commande à lancer est : {}", p.cmd);
 	// }
 
 	exec_and_monitor();
