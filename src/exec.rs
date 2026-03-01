@@ -15,10 +15,7 @@ use libc::{exit, sighandler_t};
 
 // redirige stdio du premier process dans stdin du second
 fn pipe_process() {
-	let ls = Command::new("ls")
-		.stdout(Stdio::piped())
-		.spawn()
-		.expect("Failed to execute ls");
+	let ls = Command::new("ls").stdout(Stdio::piped()).spawn().expect("Failed to execute ls");
 
 	let ls_stdout = ls.stdout.expect("failed to pipe stdout of ls process");
 
@@ -28,9 +25,7 @@ fn pipe_process() {
 		.spawn()
 		.expect("failed to execute cat");
 
-	let cat_stdout = cat
-		.wait_with_output()
-		.expect("failed to pipe stdout of cat process");
+	let cat_stdout = cat.wait_with_output().expect("failed to pipe stdout of cat process");
 
 	println!("{}", String::from_utf8_lossy(cat_stdout.stdout.as_slice()));
 }
