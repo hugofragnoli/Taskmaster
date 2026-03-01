@@ -22,7 +22,7 @@ pub fn read_command(rl: &mut DefaultEditor) -> Option<String> {
         //retour  sous forme de stringgg d'anas
         Some(trimmed.to_string());
         },
-        Err(ReadlineError::Interrupted) | Err(ReadlineError::EOF) => {
+        Err(ReadlineError::Interrupted) | Err(ReadlineError::eof) => {
             None;
         },
         Err(err) => {
