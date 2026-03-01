@@ -10,6 +10,10 @@ use config::parser::parse_config;
 use taskmasterctl::read_history::read_command;
 use taskmasterctl::read_history::setup_shell;
 
+
+//rl_save_history a la fin de la boucle : 
+// si fichier nexiste pas : le cree et y ecrit lhistorique de la session
+// sil existe: ecrase ou le met a jour avec les nouvelles commandes.
 fn main() {
 	info!("Starting taskmaster.");
 	let taskmaster = parse_config();
@@ -37,6 +41,10 @@ fn main() {
 =======
 	// println!("{:#?}", taskmaster);
 
-	let mut rl = setup_shell("history.txt").expect("Erreur setup");
->>>>>>> 3bb38c6 (correction syntaxe plein de lignes mdr)
+	let path = "history.txt";
+
+	let mut rl = match setup_shell(path) {
+		
+	};
+
 }

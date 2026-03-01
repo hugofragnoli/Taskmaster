@@ -18,7 +18,7 @@ pub fn read_command(rl: &mut DefaultEditor) -> Option<String> {
             let trimmed = line.trim();
 
             if !trimmed.is_empty(){
-                rl.add_history_entry(trimmed);
+                let _ = rl.add_history_entry(trimmed); //stocke dans la RAM. 
             }
         //retour  sous forme de stringgg d'anas
         Some(trimmed.to_string())
