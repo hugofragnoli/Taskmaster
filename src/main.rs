@@ -6,7 +6,7 @@ use std::{
 	thread,
 };
 mod taskmasterctl;
-use config::parser::parse_config;
+//use config::parser::parse_config;
 use taskmasterctl::read_history::read_command;
 use taskmasterctl::read_history::setup_shell;
 
@@ -15,9 +15,9 @@ use taskmasterctl::read_history::setup_shell;
 // si fichier nexiste pas : le cree et y ecrit lhistorique de la session
 // sil existe: ecrase ou le met a jour avec les nouvelles commandes.
 fn main() {
-	let taskmaster = parse_config();
+	// let taskmaster = parse_config();
 
-	println!("{:#?}", taskmaster);
+	// println!("{:#?}", taskmaster);
 
 	let path = "history.txt";
 

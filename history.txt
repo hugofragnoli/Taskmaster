@@ -4,3 +4,6 @@ status
 start
 stop
 exit
+caca
+kiki3
+start caca

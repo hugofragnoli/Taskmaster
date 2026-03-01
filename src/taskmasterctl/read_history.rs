@@ -20,6 +20,7 @@ pub fn read_command(rl: &mut DefaultEditor) -> Option<String> {
             if !trimmed.is_empty(){
                 let _ = rl.add_history_entry(trimmed); //stocke dans la RAM. 
             }
+            // println!("{}", trimmed.to_string()); DEBUG BG
         //retour  sous forme de stringgg d'anas
         Some(trimmed.to_string())
         },

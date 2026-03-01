@@ -151,3 +151,7 @@ pub fn exec_and_monitor() {
 		}
 	}
 }
+
+pub fn handle_commands(line: &str, taskmaster: &mut Taskmaster) {
+	
+}
