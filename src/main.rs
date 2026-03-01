@@ -1,4 +1,4 @@
-//mod config;
+mod config;
 mod logger;
 
 use std::{
@@ -6,7 +6,7 @@ use std::{
 	thread,
 };
 mod taskmasterctl;
-//use config::parser::parse_config;
+use config::parser::parse_config;
 use taskmasterctl::read_history::read_command;
 use taskmasterctl::read_history::setup_shell;
 
@@ -17,7 +17,7 @@ use taskmasterctl::read_history::setup_shell;
 fn main() {
 	let taskmaster = parse_config();
 
-	// println!("{:#?}", taskmaster);
+	println!("{:#?}", taskmaster);
 
 	let path = "history.txt";
 
@@ -35,7 +35,7 @@ fn main() {
 		}
 		// ici faut quon envoie la config + la line a handle commands comme ca il gere tout direct
 		if line.starts_with("status") || line.starts_with("start") || line.starts_with("stop") {
-			// handle_commands(line);
+			// handle_commands(line); (A CREER)
 			continue;
 		}
 		else {
