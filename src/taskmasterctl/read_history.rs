@@ -1,4 +1,5 @@
-use rustyline::{DefaultEditor, Result, ReadlineError};
+use rustyline::{DefaultEditor, Result};
+use rustyline::{error::ReadlineError};
 
 //ici result cest pas le std::result::Result classique. Cest un alias defini par rustyline.
 // il ressemble a ca : type Result<T> = std::result::Result<T, ReadlineError>;
@@ -17,12 +18,12 @@ pub fn read_command(rl: &mut DefaultEditor) -> Option<String> {
             let trimmed = line.trim();
 
             if !trimmed.is_empty(){
-                rl.add_histoyy(trimmed);
+                rl.add_history_entry(trimmed);
             }
         //retour  sous forme de stringgg d'anas
         Some(trimmed.to_string())
         },
-        Err(ReadlineError::Interrupted) | Err(ReadlineError::eof) => {
+        Err(ReadlineError::Interrupted) | Err(ReadlineError::Eof) => {
             None
         },
         Err(err) => {
