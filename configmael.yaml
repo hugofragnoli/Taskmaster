@@ -1,0 +1,39 @@
+programs:
+  ping1:
+    cmd: "ping google.com"
+    num_processes: 1
+    autostart: true
+    restart_policy: "Always"
+    expected_error_codes:
+      - 0
+      - 2
+    minimum_runtime: 5
+    max_relauch_retry: 4
+    stop_signal: Sigterm
+    time_after_proper_stop: 10
+    redirect:
+      stdout: 5
+      stderr: "/tmp/ping1_stderr.txt"
+    env_to_set:
+      chien: "chat"
+    working_dir: "/home/hello"
+    umask: 117
+  ls1:
+    cmd: "ls"
+    num_processes: 1
+    autostart: true
+    restart_policy: "Always"
+    expected_error_codes:
+      - 0
+      - 2
+    minimum_runtime: 5
+    max_relauch_retry: 4
+    stop_signal: Sigint
+    time_after_proper_stop: 10
+    redirect:
+      stdout: "/tmp/ls1_stdout.txt"
+      stderr: "/tmp/ls1_stderr.txt"
+    env_to_set:
+      chien: "chat"
+    working_dir: "/home/hello"
+    umask: 117
