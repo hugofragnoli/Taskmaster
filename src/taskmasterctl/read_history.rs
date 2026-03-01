@@ -1,0 +1,12 @@
+use rustyline::{DefaultEditor, Result};
+
+//ici result cest pas le std::result::Result classique. Cest un alias defini par rustyline.
+// il ressemble a ca : type Result<T> = std::result::Result<T, ReadlineError>;
+//Defaulteditor renvoie un ReadlineError en cas dechec.  donc cest ok. (pour nos besoins actuels en tt cas )
+fn setup_shell(history_path: &str) -> Result <DefaultEditor> {
+    let mut rl = DefaultEditor::new()?; // ? pour gerer proprement au lieu de crash si DefaultEditor Fail.
+    let _ = rl.load_history(history_path);
+    Ok(rl)
+}
+
+pub fn read_command()
