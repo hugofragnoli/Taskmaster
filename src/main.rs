@@ -1,9 +1,9 @@
 mod config;
+mod logger;
 
 use config::parser::parse_config;
 
 fn main() {
 	let taskmaster = parse_config();
-
-	println!("{:#?}", taskmaster);
+	debug!("aaa");
 }
