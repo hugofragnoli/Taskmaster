@@ -7,7 +7,6 @@ use std::{
 };
 mod taskmasterctl;
 use config::parser::parse_config;
-use libc::read;
 use taskmasterctl::read_history::read_command;
 use taskmasterctl::read_history::setup_shell;
 
@@ -66,5 +65,5 @@ fn main() {
 		}
 	}
 
-	let _ = rl.save_history(path);
+	let _ = rl.save_history(path); 
 }
