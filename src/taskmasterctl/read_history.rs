@@ -16,8 +16,18 @@ pub fn read_command(rl: &mut DefaultEditor) -> Option<String> {
         Ok(line) => {
             let trimmed = line.trim();
 
-            if !trimmed.is_empty()
+            if !trimmed.is_empty(){
                 rl.add_histoyy(trimmed);
+            }
+        //retour  sous forme de stringgg d'anas
+        Some(trimmed.to_string());
+        },
+        Err(ReadlineError::Interrupted) | Err(ReadlineError::EOF) => {
+            None;
+        },
+        Err(err) => {
+            eprintln!("Erreur : {:#?}", err);
+            None;
         }
     }
 }
