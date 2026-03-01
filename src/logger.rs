@@ -1,0 +1,3 @@
+struct Logger {}
+
+impl Logger {}
