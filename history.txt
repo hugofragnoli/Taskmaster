@@ -1,0 +1,6 @@
+#V2
+bonjour
+status
+start
+stop
+exit

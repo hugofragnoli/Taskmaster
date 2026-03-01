@@ -1,4 +1,4 @@
-mod config;
+//mod config;
 mod logger;
 
 use std::{
@@ -6,7 +6,7 @@ use std::{
 	thread,
 };
 mod taskmasterctl;
-use config::parser::parse_config;
+//use config::parser::parse_config;
 use taskmasterctl::read_history::read_command;
 use taskmasterctl::read_history::setup_shell;
 
@@ -15,30 +15,8 @@ use taskmasterctl::read_history::setup_shell;
 // si fichier nexiste pas : le cree et y ecrit lhistorique de la session
 // sil existe: ecrase ou le met a jour avec les nouvelles commandes.
 fn main() {
-	info!("Starting taskmaster.");
 	let taskmaster = parse_config();
-	info!("Config parsed");
 
-<<<<<<< HEAD
-	// https://doc.rust-lang.org/std/sync/struct.Mutex.html
-	let config = Arc::new(Mutex::new(taskmaster));
-
-	let mut threads = Vec::with_capacity(10);
-	for i in 0..10 {
-		let (data, i) = (Arc::clone(&config), i);
-		threads.push(thread::spawn(move || {
-			let data = data.lock().unwrap();
-			info!(format!(
-				"Tread {}: config.program[0].config.0 = {}",
-				i, data.programs[0].config.0
-			));
-		}));
-	}
-
-	threads
-		.into_iter()
-		.for_each(|thread| thread.join().expect("The thread creating or execution failed !"));
-=======
 	// println!("{:#?}", taskmaster);
 
 	let path = "history.txt";
@@ -55,6 +33,7 @@ fn main() {
 		if line.is_empty() {
 			continue;
 		}
+		// ici faut quon envoie la config + la line a handle commands comme ca il gere tout direct
 		if line.starts_with("status") || line.starts_with("start") || line.starts_with("stop") {
 			// handle_commands(line);
 			continue;
