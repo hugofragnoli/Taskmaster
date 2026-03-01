@@ -1,0 +1,11 @@
+# max col per line
+max_width = 120
+
+# limit chained method call at 90 char long
+chain_width = 90
+
+# same with function call
+fn_call_width = 80
+
+# small match on one line
+short_array_element_width_threshold = 50

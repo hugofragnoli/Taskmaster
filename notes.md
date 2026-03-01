@@ -38,3 +38,13 @@ Std::time::Duration::from_secs(self.min_runtime)
 
 Mutex<Config> global variable
 
+# Supervisor valeur par defaut
+
+new process 1
+autostart true
+autorestart unexpected
+exitcode 0,2
+max_retry 3
+SIGTERM
+user supervisor
+stdlogfile auto
