@@ -9,4 +9,12 @@ fn setup_shell(history_path: &str) -> Result <DefaultEditor> {
     Ok(rl)
 }
 
-pub fn read_command()
+//Option : retourne some("qqchose") si user tjrs la.
+// None si user plus la
+pub fn read_command(rl: &mut DefaultEditor) -> Option<String> {
+    match rl.readline("taskmaster >") {
+        Ok(line) => {
+            let trimmed = line.trim();
+        }
+    }
+}
