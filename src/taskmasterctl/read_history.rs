@@ -16,7 +16,7 @@ pub fn read_command(rl: &mut DefaultEditor) -> Option<String> {
         Ok(line) => {
             let trimmed = line.trim();
 
-            if (!trimmed.is_empty())
+            if !trimmed.is_empty()
                 rl.add_histoyy(trimmed);
         }
     }
