@@ -1,5 +1,7 @@
 use std::{env, fs::File, process::exit};
 
+use crate::error;
+
 use serde_yaml::from_reader;
 
 use crate::config::structs::{Program, ProgramsConfig, Taskmaster};
@@ -19,7 +21,7 @@ pub fn parse_config() -> Taskmaster {
 	let path: String;
 
 	if args.len() > 2 {
-		eprintln!("Too many arguments");
+		error!("Too many arguments");
 		exit(1);
 	} else if args.len() == 2 {
 		path = args[1].clone();
@@ -44,13 +46,13 @@ pub fn parse_config() -> Taskmaster {
 					tm
 				}
 				Err(e) => {
-					eprintln!("Unable to  parse config : {}", e);
+					error!(format!("Unable to  parse config : {}", e));
 					exit(1);
 				}
 			}
 		}
 		Err(e) => {
-			eprintln!("Unable to open file {} : {}", path, e);
+			error!(format!("Unable to open file {} : {}", path, e));
 			exit(1);
 		}
 	}
