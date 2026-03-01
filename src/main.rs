@@ -5,8 +5,9 @@ use std::{
 	sync::{Arc, Mutex, mpsc::channel},
 	thread,
 };
-
+mod taskmasterctl;
 use config::parser::parse_config;
+use taskmasterctl::read_history::read_command;
 
 fn main() {
 	info!("Starting taskmaster.");
