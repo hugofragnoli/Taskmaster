@@ -7,6 +7,7 @@ use std::{
 };
 mod taskmasterctl;
 use config::parser::parse_config;
+use libc::read;
 use taskmasterctl::read_history::read_command;
 use taskmasterctl::read_history::setup_shell;
 
@@ -44,7 +45,26 @@ fn main() {
 	let path = "history.txt";
 
 	let mut rl = match setup_shell(path) {
-		
+		Ok(editor) => editor,
+        Err(_) => return,
 	};
 
+	while let Some(line) = read_command(&mut rl) {
+		if line == "exit" {
+			break;
+		}
+		if line.is_empty() {
+			continue;
+		}
+		if line.starts_with("status") || line.starts_with("start") || line.starts_with("stop") {
+			// handle_commands(line);
+			continue;
+		}
+		else {
+			println!("Commande inconnue bro : {}", line);
+			continue;
+		}
+	}
+
+	let _ = rl.save_history(path);
 }
