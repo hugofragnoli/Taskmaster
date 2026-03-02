@@ -173,7 +173,7 @@ pub fn handle_commands_sh(line: &str, taskmaster: &mut Taskmaster) {
         },
 		["start", follow_starts @ ..] => {
 			for follow_start in follow_starts {
-				let mut tmp = follow_start.to_string(); // SOIT JENVOIE LE VEC ICI SOIT JENVOIE LA STRING
+				let mut tmp = follow_start.to_string();
 				let exists = taskmaster.programs.iter().any(|p| p.config.0 == *follow_start);
 				// dabord faut quon appelle le thread monitor pour check letat du process.
 				// ici check_process_status(follow_start); TODO
