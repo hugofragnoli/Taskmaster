@@ -10,7 +10,7 @@ use crate::config::parser::parse_config;
 
 extern crate libc;
 
-use libc::signal;
+use libc::{F_VOLPOSMODE, signal};
 use libc::{SIGINT, c_int, c_void};
 use libc::{exit, sighandler_t};
 
@@ -156,5 +156,20 @@ pub fn exec_and_monitor() {
 pub fn handle_commands(line: &str, taskmaster: &mut Taskmaster) {
 	println!("ENCOURS");
 	let splitted: Vec<&str> = line.split_whitespace().collect();
-	
+	match &splitted[..] {
+		["status"] => {
+            println!("Affichage du status...");
+			//println!("{}", taskmaster.status) //TODO
+        },
+		["start", follow_starts @ ..] => {
+			for follow_start in follow_starts {
+				let mut tmp = follow_start.to_string(); // SOIT JENVOIE LE VEC ICI SOIT JENVOIE LA STRING
+
+			}
+
+		},
+	},
+	_ => {
+		println!("Commande invalide ou arguments manquants : {}", line);
+	}
 }
