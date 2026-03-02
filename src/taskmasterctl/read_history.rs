@@ -25,11 +25,11 @@ pub fn read_command(rl: &mut DefaultEditor) -> Option<String> {
         Some(trimmed.to_string())
         },
         Err(ReadlineError::Interrupted) | Err(ReadlineError::Eof) => {
-            eprintln!("Ctrl+c Ou EOF detecte");
+            eprintln!("Ctrl+c or EOF detected");
             None
         },
         Err(err) => {
-            eprintln!("Erreur : {:#?}", err);
+            eprintln!("Error : {:#?}", err);
             None
         }
     }

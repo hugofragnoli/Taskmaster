@@ -42,7 +42,7 @@ fn main() {
 			continue;
 		}
 		else {
-			println!("Commande inconnue bro : {}", line);
+			println!("Unknown or unrecognized command bro : {}", line);
 			continue;
 		}
 	}
