@@ -158,6 +158,10 @@ fn start_sh(line: &str) {
 	//donc 
 }
 
+fn check_process_status(taskmaster: &mut Taskmaster) {
+	// peut on check juste avec taskmaster ? en
+	// thread ici pour check les status ? 
+}
 
 pub fn handle_commands_sh(line: &str, taskmaster: &mut Taskmaster) {
 	println!("ENCOURSMAELMENVEUXPASSSS");
@@ -172,8 +176,8 @@ pub fn handle_commands_sh(line: &str, taskmaster: &mut Taskmaster) {
 				let mut tmp = follow_start.to_string(); // SOIT JENVOIE LE VEC ICI SOIT JENVOIE LA STRING
 				let exists = taskmaster.programs.iter().any(|p| p.config.0 == *follow_start);
 				// dabord faut quon appelle le thread monitor pour check letat du process.
-				// ici check_process_status(follow_start);
-				if check_process_status(follow_start)
+				// ici check_process_status(follow_start); TODO
+				if check_process_status(p)
 					println!("Error : Program '{}' already running.", follow_start);
 					println!("Please enter a program name currently off.")
 				if exists && !check_process_status(follow_start) {
