@@ -153,5 +153,7 @@ pub fn exec_and_monitor() {
 }
 
 pub fn handle_commands(line: &str, taskmaster: &mut Taskmaster) {
-	println!("TODO");
+	println!("ENCOURS");
+	let splitted = line.split_whitespace().collect();
+	if (splitted[0])
 }
