@@ -29,7 +29,7 @@ fn main() {
 	};
 
 	while let Some(line) = read_command(&mut rl) {
-		if line.starts_with("exit") {
+		if line.trim_start().starts_with("exit") {
 			//Sortir propre ici // TODO
 			break;
 		}
@@ -37,8 +37,8 @@ fn main() {
 			continue;
 		}
 		// ici faut quon envoie la config + la line a handle commands comme ca il gere tout direct
-		if line.starts_with("status") || line.starts_with("start") || line.starts_with("stop") {
-			 // handle_commands(line); (A CREER) DOIT PRENDRE TASKMASTER EN PARAM. +  LINE pour comparer
+		if line.trim_start().starts_with("status") || line.trim_start().starts_with("start") || line.trim_start().starts_with("stop") {
+			 // handle_commands(&taskmaster, line); (A CREER) DOIT PRENDRE TASKMASTER EN PARAM. +  LINE pour comparer
 			continue;
 		}
 		else {
@@ -46,6 +46,5 @@ fn main() {
 			continue;
 		}
 	}
-
 	let _ = rl.save_history(path); 
 }

@@ -25,14 +25,6 @@ pub enum _Discardoptions {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum _Shelloptions {
-	Start,
-	Stop,
-	Status,
-	Exit,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Redirect {
 	// filepaths
 	pub stdout: String,

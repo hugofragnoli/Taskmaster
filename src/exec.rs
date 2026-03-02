@@ -5,7 +5,8 @@ use std::{
 	time::Duration,
 };
 
-use crate::ProgramConfig;
+use crate::config::structs::ProgramConfig2;
+use crate::config::parser::parse_config;
 
 extern crate libc;
 
@@ -154,6 +155,6 @@ pub fn exec_and_monitor() {
 
 pub fn handle_commands(line: &str, taskmaster: &mut Taskmaster) {
 	println!("ENCOURS");
-	let splitted = line.split_whitespace().collect();
-	if (splitted[0])
+	let splitted: Vec<&str> = line.split_whitespace().collect();
+	
 }
