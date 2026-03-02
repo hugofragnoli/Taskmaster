@@ -9,6 +9,7 @@ mod taskmasterctl;
 //use config::parser::parse_config;
 use taskmasterctl::read_history::read_command;
 use taskmasterctl::read_history::setup_shell;
+use exec::handle_commands;
 
 
 //rl_save_history a la fin de la boucle : 
