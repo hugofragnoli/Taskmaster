@@ -153,7 +153,7 @@ pub fn exec_and_monitor() {
 	}
 }
 
-pub fn handle_commands(line: &str, taskmaster: &mut Taskmaster) {
+pub fn handle_commands_sh(line: &str, taskmaster: &mut Taskmaster) {
 	println!("ENCOURS");
 	let splitted: Vec<&str> = line.split_whitespace().collect();
 	match &splitted[..] {
@@ -164,10 +164,22 @@ pub fn handle_commands(line: &str, taskmaster: &mut Taskmaster) {
 		["start", follow_starts @ ..] => {
 			for follow_start in follow_starts {
 				let mut tmp = follow_start.to_string(); // SOIT JENVOIE LE VEC ICI SOIT JENVOIE LA STRING
+				let exists = taskmaster.programs.iter().any(|p| p.config.0 == *follow_start);
 
+				if exists {
+					println!("Lancement de : {}", follow_start);
+					start_sh(line, taskmaster);
+				} else {
+					println!("Erreur : Le programme '{}' n'existe pas dans la config.", follow_start);
+					// FAIRE QUELQUE CHOSE
+				}
 			}
 
 		},
+		["restart", follow_starts @ ..] => {
+			
+		}
+
 	},
 	_ => {
 		println!("Commande invalide ou arguments manquants : {}", line);

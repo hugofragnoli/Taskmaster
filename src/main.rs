@@ -10,7 +10,7 @@ mod exec;
 //use config::parser::parse_config;
 use taskmasterctl::read_history::read_command;
 use taskmasterctl::read_history::setup_shell;
-use exec::handle_commands;
+use exec::handle_commands_sh;
 
 
 //rl_save_history a la fin de la boucle : 
@@ -37,8 +37,8 @@ fn main() {
 			continue;
 		}
 		// ici faut quon envoie la config + la line a handle commands comme ca il gere tout direct
-		if line.trim_start().starts_with("status") || line.trim_start().starts_with("start") || line.trim_start().starts_with("stop") {
-			 // handle_commands(&taskmaster, line); (A CREER) DOIT PRENDRE TASKMASTER EN PARAM. +  LINE pour comparer
+		if line.trim_start().starts_with("status") || line.trim_start().starts_with("start") || line.trim_start().starts_with("stop") || line.trim_start().starts_with("restart"){
+			 // handle_commands_sh(&taskmaster, line); (A CREER) DOIT PRENDRE TASKMASTER EN PARAM. +  LINE pour comparer
 			continue;
 		}
 		else {
