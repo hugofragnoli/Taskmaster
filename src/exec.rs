@@ -153,8 +153,9 @@ pub fn exec_and_monitor() {
 	}
 }
 
-fn start_sh(line: &str, taskmaster: &mut Taskmaster) {
-
+fn start_sh(line: &str) {
+	
+	//donc 
 }
 
 
@@ -170,10 +171,11 @@ pub fn handle_commands_sh(line: &str, taskmaster: &mut Taskmaster) {
 			for follow_start in follow_starts {
 				let mut tmp = follow_start.to_string(); // SOIT JENVOIE LE VEC ICI SOIT JENVOIE LA STRING
 				let exists = taskmaster.programs.iter().any(|p| p.config.0 == *follow_start);
-
-				if exists {
+				// dabord faut quon appelle le thread monitor pour check letat du process.
+				// ici check_process_status(follow_start);
+				if exists && !check_process_status(follow_start) {
 					println!("Lancement de : {}", follow_start);
-					start_sh(line, taskmaster);
+					start_sh(*follow_start); // EN COURS
 				} else {
 					println!("Erreur : Le programme '{}' n'existe pas dans la config.", follow_start);
 					// FAIRE QUELQUE CHOSE
