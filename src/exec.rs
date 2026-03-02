@@ -153,8 +153,13 @@ pub fn exec_and_monitor() {
 	}
 }
 
+fn start_sh(line: &str, taskmaster: &mut Taskmaster) {
+
+}
+
+
 pub fn handle_commands_sh(line: &str, taskmaster: &mut Taskmaster) {
-	println!("ENCOURS");
+	println!("ENCOURSMAELMENVEUXPASSSS");
 	let splitted: Vec<&str> = line.split_whitespace().collect();
 	match &splitted[..] {
 		["status"] => {
