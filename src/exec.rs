@@ -164,7 +164,7 @@ pub fn handle_commands_sh(line: &str, taskmaster: &mut Taskmaster) {
 	let splitted: Vec<&str> = line.split_whitespace().collect();
 	match &splitted[..] {
 		["status"] => {
-            println!("Affichage du status...");
+            println!("Printing status...");
 			//println!("{}", taskmaster.status) //TODO
         },
 		["start", follow_starts @ ..] => {
@@ -173,11 +173,14 @@ pub fn handle_commands_sh(line: &str, taskmaster: &mut Taskmaster) {
 				let exists = taskmaster.programs.iter().any(|p| p.config.0 == *follow_start);
 				// dabord faut quon appelle le thread monitor pour check letat du process.
 				// ici check_process_status(follow_start);
+				if check_process_status(follow_start)
+					println!("Error : Program '{}' already running.", follow_start);
+					println!("Please enter a program name currently off.")
 				if exists && !check_process_status(follow_start) {
-					println!("Lancement de : {}", follow_start);
+					println!("Launching : {}", follow_start);
 					start_sh(*follow_start); // EN COURS
 				} else {
-					println!("Erreur : Le programme '{}' n'existe pas dans la config.", follow_start);
+					println!("Error : Prog '{}' has not been found on the config.yaml file.", follow_start);
 					// FAIRE QUELQUE CHOSE
 				}
 			}
@@ -189,6 +192,6 @@ pub fn handle_commands_sh(line: &str, taskmaster: &mut Taskmaster) {
 
 	},
 	_ => {
-		println!("Commande invalide ou arguments manquants : {}", line);
+		println!("Error : Invalid command or missing arguments : {}", line);
 	}
 }
