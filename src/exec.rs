@@ -158,9 +158,18 @@ fn start_sh(line: &str) {
 	//donc 
 }
 
-fn check_process_status(taskmaster: &mut Taskmaster) {
+fn check_process_status(taskmaster: &mut Taskmaster) -> bool {
 	// peut on check juste avec taskmaster ? en
 	// thread ici pour check les status ? 
+	// checkage d'etat  true = actif false = mort
+	// en attendant jfais pas de thread bg
+	match child.try_wait() {
+		Ok(None) => true,
+		Ok(Some) => false,
+		Err(_) => false,
+	}
+
+	return false;
 }
 
 pub fn handle_commands_sh(line: &str, taskmaster: &mut Taskmaster) {
