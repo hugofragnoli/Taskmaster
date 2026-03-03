@@ -5,8 +5,8 @@ use std::{
 	time::Duration,
 };
 
-use crate::config::structs::ProgramConfig2;
 use crate::config::parser::parse_config;
+use crate::config::structs::{Taskmaster, Program, ProgramConfig2};
 
 extern crate libc;
 
@@ -157,40 +157,40 @@ fn start_sh(program: &mut Program) {
 	// ON va mettre un fichier de log par commande ca posera pas de pb dacces DIS MOI CE QUE TEN PENSES BG
 	let prog_name = &program.config.0; // "nom du prog bg"
 	let args = &program.config.1; // "toute la conf"
-	let split_args: Vec<&str> = conf.cmd.split_whitespace().collect();
+	let split_args: Vec<&str> = args.cmd.split_whitespace().collect();
 	if let Some(binary) = split_args.get(0) { // binary = le nom du binaire quon veut lancer.
 		
-		let logfile_name = format!("{}.txt", binary)
+		let logfile_name = format!("{}.txt", prog_name);
 		let logfile = File::create(&logfile_name).expect("failed to create file");
 		let mut child = Command::new(binary)
 			.stdout(logfile)
 			.args(&split_args[1..])
 			.spawn()
-			.expect("failed to start {}", prog_name);
+			.expect("failed to start");
 
 		println!("🚀 [{}] lancé avec le PID {}", prog_name, child.id());
         program.childs.push(child);
 	}
 }
 
-fn check_process_status(taskmaster: &mut Taskmaster) -> bool {
+fn check_process_status(program: &mut Program) -> bool {
 	// peut on check juste avec taskmaster ? en
 	// thread ici pour check les status ? 
 	// checkage d'etat  true = actif false = mort
 	// en attendant jfais pas de thread bg
-	taskmaster.programs.*program.child.retain_mut(|child|) {
+	program.childs.retain_mut(|child|  {
 		match child.try_wait() {
 			Ok(None) => true,
-			Ok(Some) => false,
+			Ok(Some(_)) => false,
 			Err(_) => false,
 		}
-	};
-
+	});
+	program.childs.is_empty();
 	return false;
 }
 
 pub fn handle_commands_sh(line: &str, taskmaster: &mut Taskmaster) {
-	println!("ENCOURSMAELMENVEUXPASSSS");
+	// println!("ENCOURSMAELMENVEUXPASSSS");
 	let splitted: Vec<&str> = line.split_whitespace().collect();
 	match &splitted[..] {
 		["status"] => {
@@ -220,9 +220,8 @@ pub fn handle_commands_sh(line: &str, taskmaster: &mut Taskmaster) {
 		// ["restart", follow_starts @ ..] => {
 			
 		// }
-
-	},
-	_ => {
-		println!("Error : Invalid command or missing arguments : {}", line);
+		_ => {
+			println!("Error : Invalid command or missing arguments : {}", line);
+		}
 	}
 }

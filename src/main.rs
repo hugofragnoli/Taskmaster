@@ -11,13 +11,15 @@ mod exec;
 use taskmasterctl::read_history::read_command;
 use taskmasterctl::read_history::setup_shell;
 use exec::handle_commands_sh;
+use crate::config::structs::{Taskmaster, Program, ProgramConfig2};
+use crate::config::parser::parse_config;
 
 
 //rl_save_history a la fin de la boucle : 
 // si fichier nexiste pas : le cree et y ecrit lhistorique de la session
 // sil existe: ecrase ou le met a jour avec les nouvelles commandes.
 fn main() {
-	// let taskmaster = parse_config();
+	let mut taskmaster = parse_config();
 
 	// println!("{:#?}", taskmaster);
 
@@ -38,7 +40,7 @@ fn main() {
 		}
 		// ici faut quon envoie la config + la line a handle commands comme ca il gere tout direct
 		if line.trim_start().starts_with("status") || line.trim_start().starts_with("start") || line.trim_start().starts_with("stop") || line.trim_start().starts_with("restart"){
-			handle_commands_sh(line, &taskmaster);
+			handle_commands_sh(&line, &mut taskmaster);
 			continue;
 		}
 		else {

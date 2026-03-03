@@ -7,3 +7,7 @@ exit
 caca
 kiki3
 start caca
+status
+status godjgdkj
+start my_ping
+start ping1
