@@ -38,7 +38,7 @@ fn main() {
 		}
 		// ici faut quon envoie la config + la line a handle commands comme ca il gere tout direct
 		if line.trim_start().starts_with("status") || line.trim_start().starts_with("start") || line.trim_start().starts_with("stop") || line.trim_start().starts_with("restart"){
-			 // handle_commands_sh(&taskmaster, line); (A CREER) DOIT PRENDRE TASKMASTER EN PARAM. +  LINE pour comparer
+			handle_commands_sh(line, &taskmaster);
 			continue;
 		}
 		else {

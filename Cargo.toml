@@ -7,8 +7,4 @@ edition = "2024"
 libc = "0.2.182"
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9"
-<<<<<<< HEAD
 rustyline = "17.0.2"
-=======
-rustyline = "14.0.0"
->>>>>>> 3bb38c6 (correction syntaxe plein de lignes mdr)

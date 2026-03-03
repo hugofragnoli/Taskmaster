@@ -217,9 +217,9 @@ pub fn handle_commands_sh(line: &str, taskmaster: &mut Taskmaster) {
 				}
 			}
 		},
-		["restart", follow_starts @ ..] => {
+		// ["restart", follow_starts @ ..] => {
 			
-		}
+		// }
 
 	},
 	_ => {
