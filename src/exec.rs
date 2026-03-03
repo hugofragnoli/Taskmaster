@@ -163,11 +163,13 @@ fn check_process_status(taskmaster: &mut Taskmaster) -> bool {
 	// thread ici pour check les status ? 
 	// checkage d'etat  true = actif false = mort
 	// en attendant jfais pas de thread bg
-	match child.try_wait() {
-		Ok(None) => true,
-		Ok(Some) => false,
-		Err(_) => false,
-	}
+	taskmaster.programs.*program.child.retain_mut(|child|) {
+		match child.try_wait() {
+			Ok(None) => true,
+			Ok(Some) => false,
+			Err(_) => false,
+		}
+	};
 
 	return false;
 }
@@ -183,18 +185,19 @@ pub fn handle_commands_sh(line: &str, taskmaster: &mut Taskmaster) {
 		["start", follow_starts @ ..] => {
 			for follow_start in follow_starts {
 				let mut tmp = follow_start.to_string();
-				let exists = taskmaster.programs.iter().any(|p| p.config.0 == *follow_start);
-				// dabord faut quon appelle le thread monitor pour check letat du process.
-				// ici check_process_status(follow_start); TODO
-				if check_process_status(p)
-					println!("Error : Program '{}' already running.", follow_start);
-					println!("Please enter a program name currently off.")
-				if exists && !check_process_status(follow_start) {
-					println!("Launching : {}", follow_start);
-					start_sh(*follow_start); // EN COURS
-				} else {
+				if let Some(p) = taskmaster.programs.iter_mut().find(|p| p.config.0 == tmp) {
+				// PEUT ETRE faut quon appelle le thread monitor pour check letat du process.
+					if check_process_status(p) {
+						println!("Error : Program '{}' already running.", follow_start);
+						println!("Please enter a program name currently off.")
+					}
+					else {
+						println!("Launching : {}", follow_start);
+						start_sh(*follow_start);
+					}
+				}
+				else {
 					println!("Error : Prog '{}' has not been found on the config.yaml file.", follow_start);
-					// FAIRE QUELQUE CHOSE
 				}
 			}
 
