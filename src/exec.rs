@@ -153,28 +153,24 @@ pub fn exec_and_monitor() {
 	}
 }
 
-fn test_function(program: &mut Program) {
+fn start_sh(program: &mut Program) {
 	// ON va mettre un fichier de log par commande ca posera pas de pb dacces DIS MOI CE QUE TEN PENSES BG
-	let cmdd = &program.config.0; // "nom du prog bg"
+	let prog_name = &program.config.0; // "nom du prog bg"
 	let args = &program.config.1; // "toute la conf"
 	let split_args: Vec<&str> = conf.cmd.split_whitespace().collect();
-	if let Some(binary) = split_args.get(0) { // binary = la cmd brute
-		let mut cmd = Command::new(binary)
-		let logfile_name = binary + ".txt";
-		let logfile = File::create("logfile.txt").expect("failed to create file");
+	if let Some(binary) = split_args.get(0) { // binary = le nom du binaire quon veut lancer.
+		
+		let logfile_name = format!("{}.txt", binary)
+		let logfile = File::create(&logfile_name).expect("failed to create file");
+		let mut child = Command::new(binary)
 			.stdout(logfile)
-			.args(&[program.config.2 [..]])
+			.args(&split_args[1..])
 			.spawn()
-			.expect("failed to start ping");
+			.expect("failed to start {}", prog_name);
 
-		sleep(Duration::from_mins(2)); // sleep 2 minutes
-		ping.kill().expect("Failed to kill ping");
+		println!("🚀 [{}] lancé avec le PID {}", prog_name, child.id());
+        program.childs.push(child);
 	}
-}
-
-fn start_sh(program: &mut Program) {
-	// on utilise les donnees quon a recup dans p dans handle commands
-	//donc 
 }
 
 fn check_process_status(taskmaster: &mut Taskmaster) -> bool {
@@ -220,7 +216,6 @@ pub fn handle_commands_sh(line: &str, taskmaster: &mut Taskmaster) {
 					println!("Error : Prog '{}' has not been found on the config.yaml file.", follow_start);
 				}
 			}
-
 		},
 		["restart", follow_starts @ ..] => {
 			
