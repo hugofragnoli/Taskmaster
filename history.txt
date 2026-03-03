@@ -11,3 +11,10 @@ status
 status godjgdkj
 start my_ping
 start ping1
+ls
+clear
+ls
+start ping1
+status
+status ping1
+exit
