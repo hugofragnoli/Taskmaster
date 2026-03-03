@@ -153,8 +153,22 @@ pub fn exec_and_monitor() {
 	}
 }
 
-fn start_sh(line: &str) {
-	
+fn test_function(program: &mut Program) {
+	// ON va mettre un fichier de log par commande ca posera pas de pb dacces DIS MOI CE QUE TEN PENSES BG
+	let cmd_and_args: Vec<&str> = program.config.1.cmd.split_whitespace().collect();
+	if let Some(binary)
+	let mut ping = Command::new("{}", program.config.1)
+		.stdout(logfile)
+		.args(&[program.config.2 [..]])
+		.spawn()
+		.expect("failed to start ping");
+
+	sleep(Duration::from_mins(2)); // sleep 2 minutes
+	ping.kill().expect("Failed to kill ping");
+}
+
+fn start_sh(program: &mut Program) {
+	// on utilise les donnees quon a recup dans p dans handle commands
 	//donc 
 }
 
@@ -185,15 +199,16 @@ pub fn handle_commands_sh(line: &str, taskmaster: &mut Taskmaster) {
 		["start", follow_starts @ ..] => {
 			for follow_start in follow_starts {
 				let mut tmp = follow_start.to_string();
+				// on essaie de trouver larg dans la list de prog. .0 
 				if let Some(p) = taskmaster.programs.iter_mut().find(|p| p.config.0 == tmp) {
 				// PEUT ETRE faut quon appelle le thread monitor pour check letat du process.
 					if check_process_status(p) {
 						println!("Error : Program '{}' already running.", follow_start);
-						println!("Please enter a program name currently off.")
+						println!("Please enter a program name currently off.");
 					}
 					else {
 						println!("Launching : {}", follow_start);
-						start_sh(*follow_start);
+						start_sh(p);
 					}
 				}
 				else {
