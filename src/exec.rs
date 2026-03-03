@@ -155,16 +155,21 @@ pub fn exec_and_monitor() {
 
 fn test_function(program: &mut Program) {
 	// ON va mettre un fichier de log par commande ca posera pas de pb dacces DIS MOI CE QUE TEN PENSES BG
-	let cmd_and_args: Vec<&str> = program.config.1.cmd.split_whitespace().collect();
-	if let Some(binary)
-	let mut ping = Command::new("{}", program.config.1)
-		.stdout(logfile)
-		.args(&[program.config.2 [..]])
-		.spawn()
-		.expect("failed to start ping");
+	let cmdd = &program.config.0; // "nom du prog bg"
+	let args = &program.config.1; // "toute la conf"
+	let split_args: Vec<&str> = conf.cmd.split_whitespace().collect();
+	if let Some(binary) = split_args.get(0) { // binary = la cmd brute
+		let mut cmd = Command::new(binary)
+		let logfile_name = binary + ".txt";
+		let logfile = File::create("logfile.txt").expect("failed to create file");
+			.stdout(logfile)
+			.args(&[program.config.2 [..]])
+			.spawn()
+			.expect("failed to start ping");
 
-	sleep(Duration::from_mins(2)); // sleep 2 minutes
-	ping.kill().expect("Failed to kill ping");
+		sleep(Duration::from_mins(2)); // sleep 2 minutes
+		ping.kill().expect("Failed to kill ping");
+	}
 }
 
 fn start_sh(program: &mut Program) {
