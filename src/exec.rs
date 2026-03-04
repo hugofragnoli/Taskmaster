@@ -1,22 +1,19 @@
 use std::{
 	fs::File,
-	process::{Child, Command, Stdio},
-	thread::sleep,
-	time::Duration,
+	process::Command,
 };
 
-use crate::config::parser::parse_config;
-use crate::config::structs::{Program, ProgramConfig2, Taskmaster};
+use crate::config::structs::{Program, Taskmaster};
 
-extern crate libc;
+// extern crate libc;
 
-use libc::{F_VOLPOSMODE, signal};
-use libc::{SIGINT, c_int, c_void};
-use libc::{exit, sighandler_t};
+// use libc::{F_VOLPOSMODE, signal};
+// use libc::{SIGINT, c_int, c_void};
+// use libc::{exit, sighandler_t};
 
-fn get_handler() -> sighandler_t {
-	handler as extern "C" fn(c_int) as *mut c_void as sighandler_t
-}
+// fn get_handler() -> sighandler_t {
+// 	handler as extern "C" fn(c_int) as *mut c_void as sighandler_t
+// }
 
 // fn start_program(config: &mut MiniConfig) -> Child {
 // 	if config.redirect {
@@ -37,7 +34,7 @@ fn get_handler() -> sighandler_t {
 // 	}
 // }
 
-fn start_sh(program: &mut Program) {
+fn start_prog(program: &mut Program) {
 	// ON va mettre un fichier de log par commande ca posera pas de pb dacces DIS MOI CE QUE TEN PENSES BG
 	let prog_name = &program.config.0; // "nom du prog bg"
 	let args = &program.config.1; // "toute la conf"
@@ -47,29 +44,39 @@ fn start_sh(program: &mut Program) {
 
 		let logfile_name = format!("{}.txt", prog_name);
 		let logfile = File::create(&logfile_name).expect("failed to create file");
-		let mut child = Command::new(binary)
-			.stdout(logfile)
-			.args(&split_args[1..])
-			.spawn()
-			.expect("failed to start");
-
-		println!("🚀 [{}] lancé avec le PID {}", prog_name, child.id());
-		program.childs.push(child);
+		match Command::new(binary)
+            .stdout(logfile)
+            .args(&split_args[1..])
+            .spawn()
+		{
+			Ok(child) => {
+				println!("Program [{}] launch with PID {}", prog_name, child.id());
+				program.childs.push(child);
+			}
+			Err(e) => println!("Error during program [{}] launch : {}", prog_name, e),
+		}
 	}
 }
 
-fn check_process_status(program: &mut Program) -> bool {
-	// peut on check juste avec taskmaster ? en
-	// thread ici pour check les status ?
-	// checkage d'etat  true = actif false = mort
-	// en attendant jfais pas de thread bg
-	program.childs.retain_mut(|child| match child.try_wait() {
-		Ok(None) => true,
-		Ok(Some(_)) => false,
-		Err(_) => false,
-	});
-	program.childs.is_empty();
-	return false;
+pub fn check_process_status(taskmaster: &mut Taskmaster) {
+	//ADAPTATION POUR COLLER A la struct des threads en cours
+	for program in &mut taskmaster.programs {
+        let prog_name = &program.config.0.clone();
+		program.childs.retain_mut(|child| match child.try_wait() {
+			Ok(Some(status)) => {
+                println!("[{}] has stopped with status: {}", prog_name, status);
+                // TODO plus tard: C'est ici qu'on gérera le "restart_always"
+                false // Le process est mort, on le retire de la liste des vivantss
+            }
+            Ok(None) => {
+                true // Le process tourne encore, on le garde
+            }
+            Err(e) => {
+                println!("Error while checking status of [{}]: {}", prog_name, e); // check qui fail.
+                false
+            }
+		});
+	}
 }
 
 pub fn handle_commands_sh(line: &str, taskmaster: &mut Taskmaster) {
@@ -91,7 +98,7 @@ pub fn handle_commands_sh(line: &str, taskmaster: &mut Taskmaster) {
 						println!("Please enter a program name currently off.");
 					} else {
 						println!("Launching : {}", follow_start);
-						start_sh(p);
+						start_prog(p);
 					}
 				} else {
 					println!("Error : Prog '{}' has not been found on the config.yaml file.", follow_start);
