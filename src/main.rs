@@ -44,7 +44,7 @@ fn exec_thread_entry(
 			}
 		}
 		check_process_status(&mut taskmaster);
-		sleep(Duration::from_secs(1));
+		sleep(Duration::from_millis(100));
 	}
 }
 
@@ -59,7 +59,6 @@ fn main_thread_entry(
             
             match &splitted[..] {
                 ["start" | "restart", follow_starts @ ..] => {
-                    // On boucle sur tous les arguments (ex: ping1 ping2)
                     for prog_name in follow_starts {
                         let res = sender.send(ThreadMessage::Start(prog_name.to_string()));
 					println!("Command start sent: {:?}", res);
@@ -72,7 +71,7 @@ fn main_thread_entry(
                     break;
 				}
 				["status"] => {
-                    // C'est ici qu'on enverra ThreadMessage::StatusAll plus tard !
+                    // C'est ici qu'on enverra ThreadMessage::StatusAll 
                     println!("Demande de status envoyée...");
                 }
                 _ => {
