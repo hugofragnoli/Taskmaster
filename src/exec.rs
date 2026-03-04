@@ -34,7 +34,7 @@ use crate::config::structs::{Program, Taskmaster};
 // 	}
 // }
 
-fn start_prog(program: &mut Program) {
+pub fn start_prog(program: &mut Program) {
 	// ON va mettre un fichier de log par commande ca posera pas de pb dacces DIS MOI CE QUE TEN PENSES BG
 	let prog_name = &program.config.0; // "nom du prog bg"
 	let args = &program.config.1; // "toute la conf"
@@ -78,39 +78,3 @@ pub fn check_process_status(taskmaster: &mut Taskmaster) {
 		});
 	}
 }
-
-pub fn handle_commands_sh(line: &str, taskmaster: &mut Taskmaster) {
-	// println!("ENCOURSMAELMENVEUXPASSSS");
-	let splitted: Vec<&str> = line.split_whitespace().collect();
-	match &splitted[..] {
-		["status"] => {
-			println!("Printing status...");
-			//println!("{}", taskmaster.status) //TODO
-		}
-		["start", follow_starts @ ..] => {
-			for follow_start in follow_starts {
-				let mut tmp = follow_start.to_string();
-				// on essaie de trouver larg dans la list de prog. .0
-				if let Some(p) = taskmaster.programs.iter_mut().find(|p| p.config.0 == tmp) {
-					// PEUT ETRE faut quon appelle le thread monitor pour check letat du process.
-					if check_process_status(p) {
-						println!("Error : Program '{}' already running.", follow_start);
-						println!("Please enter a program name currently off.");
-					} else {
-						println!("Launching : {}", follow_start);
-						start_prog(p);
-					}
-				} else {
-					println!("Error : Prog '{}' has not been found on the config.yaml file.", follow_start);
-				}
-			}
-		}
-		// ["restart", follow_starts @ ..] => {
-
-		// }
-		_ => {
-			println!("Error : Invalid command or missing arguments : {}", line);
-		}
-	}
-}
-
