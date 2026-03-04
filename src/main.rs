@@ -10,12 +10,13 @@ mod communication;
 mod exec;
 mod taskmasterctl;
 //use config::parser::parse_config;
-use crate::config::structs::{Program, ProgramConfig2, Taskmaster};
+use crate::config::structs::Taskmaster;
 use crate::{communication::ThreadMessage, config::parser::parse_config};
 use exec::{start_prog, check_process_status};
 use taskmasterctl::read_history::read_command;
 use taskmasterctl::read_history::setup_shell;
 
+//ajout de taskmaster en param pour recup du main.
 fn exec_thread_entry(
 	receiver: std::sync::mpsc::Receiver<communication::ThreadMessage>,
 	sender: std::sync::mpsc::Sender<communication::ThreadMessage>,
@@ -53,6 +54,7 @@ fn main_thread_entry(
 	sender: std::sync::mpsc::Sender<communication::ThreadMessage>,
 	mut rl: rustyline::Editor<(), rustyline::history::FileHistory>,
 ) {
+	//copie de lancien handle_commands_sh
 	loop {
 		if let Some(cmd) = read_command(&mut rl) {
 			let splitted: Vec<&str> = cmd.split_whitespace().collect();
@@ -84,9 +86,6 @@ fn main_thread_entry(
 	}
 }
 
-//rl_save_history a la fin de la boucle :
-// si fichier nexiste pas : le cree et y ecrit lhistorique de la session
-// sil existe: ecrase ou le met a jour avec les nouvelles commandes.
 fn main() {
 	let mut taskmaster = parse_config();
 
@@ -104,32 +103,10 @@ fn main() {
 
 	// exec_to_main
 	let (exec_to_main_sender, exec_to_main_receiver) = channel::<ThreadMessage>();
-
+	//on utilise move pour transferer le ownership au thread exec. Le thread exec recupere tout droit sur la struct taskmaster
+	//thread main na plus le droit de lutiliser, de le lire ou de le modif.
 	let thread_exec = thread::spawn(move || {
 		exec_thread_entry(main_to_exec_receiver, exec_to_main_sender, taskmaster)
 	});
 	main_thread_entry(exec_to_main_receiver, main_to_exec_sender, rl);
-
-	// while let Some(line) = read_command(&mut rl) {
-	// 	if line.trim_start().starts_with("exit") {
-	// 		//Sortir propre ici // TODO
-	// 		break;
-	// 	}
-	// 	if line.is_empty() {
-	// 		continue;
-	// 	}
-	// 	// ici faut quon envoie la config + la line a handle commands comme ca il gere tout direct
-	// 	if line.trim_start().starts_with("status")
-	// 		|| line.trim_start().starts_with("start")
-	// 		|| line.trim_start().starts_with("stop")
-	// 		|| line.trim_start().starts_with("restart")
-	// 	{
-	// 		handle_commands_sh(&line, &mut taskmaster);
-	// 		continue;
-	// 	} else {
-	// 		println!("Unknown or unrecognized command bro : {}", line);
-	// 		continue;
-	// 	}
-	// }
-	// let _ = rl.save_history(path);
 }
