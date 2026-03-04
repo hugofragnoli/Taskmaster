@@ -72,11 +72,11 @@ fn main_thread_entry(
 				}
 				["status"] => {
                     // C'est ici qu'on enverra ThreadMessage::StatusAll 
-                    println!("Demande de status envoyée...");
+                    println!("status request sent...");
                 }
                 _ => {
                     if !cmd.trim().is_empty() {
-                        println!("Erreur : Commande invalide ou arguments manquants : {}", cmd);
+                        println!("Error : Invalid command or missing argument(s) : {}", cmd);
                     }
                 }
 			}
