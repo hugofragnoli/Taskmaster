@@ -58,7 +58,7 @@ fn main_thread_entry(
 	loop {
 		if let Some(cmd) = read_command(&mut rl) {
 			let splitted: Vec<&str> = cmd.split_whitespace().collect();
-            
+            //ajout du sighandler TODO
             match &splitted[..] {
                 ["start" | "restart", follow_starts @ ..] => {
                     for prog_name in follow_starts {
@@ -69,7 +69,7 @@ fn main_thread_entry(
 				["exit"] => {
                     let res = sender.send(ThreadMessage::Exit);
                     println!("Commande exit sent...");
-                    sleep(Duration::from_secs(4)); // Sleep en attendant quon ferme tout ? 
+                    sleep(Duration::from_secs(1)); // Sleep en attendant quon ferme tout ? 
                     break;
 				}
 				["status"] => {
