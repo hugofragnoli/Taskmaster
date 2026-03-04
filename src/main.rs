@@ -38,7 +38,7 @@ fn exec_thread_entry(
 				}
 				ThreadMessage::Exit => {
 					println!("exiting...");
-					break;
+					return; //break plutot que return pour bien quittter la fonction et detruire le thread exec.
 				}
 				_ => println!("CACA"),
 			}
