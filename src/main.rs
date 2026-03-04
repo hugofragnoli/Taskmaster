@@ -45,14 +45,31 @@ fn main_thread_entry(
 ) {
 	loop {
 		if let Some(cmd) = read_command(&mut rl) {
-			if cmd.trim_start().starts_with("start") {
-				let res = sender.send(ThreadMessage::Start("ping".to_string()));
-				println!("Command start sent: {:?}", res);
-			} else if cmd.trim_start().starts_with("exit") {
-				let res = sender.send(ThreadMessage::Exit);
-				println!("Command exit sent: {:?}", res);
-				sleep(Duration::from_secs(4));
-				break;
+			let splitted: Vec<&str> = cmd.split_whitespace().collect();
+            
+            match &splitted[..] {
+                ["start" | "restart", follow_starts @ ..] => {
+                    // On boucle sur tous les arguments (ex: ping1 ping2)
+                    for prog_name in follow_starts {
+                        let res = sender.send(ThreadMessage::Start(prog_name.to_string()));
+					println!("Command start sent: {:?}", res);
+					}
+				}
+				["exit"] => {
+                    let res = sender.send(ThreadMessage::Exit);
+                    println!("Commande exit sent...");
+                    sleep(Duration::from_secs(4)); // Sleep en attendant quon ferme tout ? 
+                    break;
+				}
+				["status"] => {
+                    // C'est ici qu'on enverra ThreadMessage::StatusAll plus tard !
+                    println!("Demande de status envoyée...");
+                }
+                _ => {
+                    if !cmd.trim().is_empty() {
+                        println!("Erreur : Commande invalide ou arguments manquants : {}", cmd);
+                    }
+                }
 			}
 		}
 	}
