@@ -13,7 +13,8 @@ pub fn setup_shell(history_path: &str) -> Result <DefaultEditor> {
 //Option : retourne some("qqchose") si user tjrs la.
 // None si user plus la
 pub fn read_command(rl: &mut DefaultEditor) -> Option<String> {
-    match rl.readline("taskmaster >") {
+    let prompt = "\x01\x1b[94m\x02tas\x01\x1b[97m\x02kmas\x01\x1b[91m\x02ter > \x01\x1b[0m\x02";
+    match rl.readline(prompt) {
         Ok(line) => {
             let trimmed = line.trim();
             
