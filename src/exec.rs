@@ -34,6 +34,28 @@ use crate::config::structs::{Program, Taskmaster};
 // 	}
 // }
 
+//ici on met une option sur le target prog pour differencier le print de tous les status ou dun seul prog. 
+// si une target prog est fournie on compare pour print que ca.
+pub fn print_status(taskmaster: &Taskmaster, target_prog: Option<&str>) {
+	for program in &taskmaster.programs {
+        let prog_name = &program.config.0;
+
+        if let Some(target) = target_prog {
+            if prog_name != target {
+                continue;
+            }
+        }
+
+		let is_running = !program.childs.is_empty();
+		let pids: Vec<u32> = program.childs.iter().map(|c| c.id()).collect();
+		if is_running {
+            println!("[STATUS] {} est EN COURS (PIDs: {:?})", prog_name, pids);
+        } else {
+            println!("[STATUS] {} est ARRÊTÉ", prog_name);
+        }
+	}
+}
+
 pub fn start_prog(program: &mut Program) {
 	// ON va mettre un fichier de log par commande ca posera pas de pb dacces DIS MOI CE QUE TEN PENSES BG
 	let prog_name = &program.config.0; // "nom du prog bg"

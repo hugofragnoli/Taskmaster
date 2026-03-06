@@ -12,7 +12,7 @@ mod taskmasterctl;
 //use config::parser::parse_config;
 use crate::config::structs::Taskmaster;
 use crate::{communication::ThreadMessage, config::parser::parse_config};
-use exec::{start_prog, check_process_status};
+use exec::{start_prog, check_process_status, print_status};
 use taskmasterctl::read_history::read_command;
 use taskmasterctl::read_history::setup_shell;
 
@@ -41,14 +41,13 @@ fn exec_thread_entry(
 					println!("exiting...");
 					return; //break plutot que return pour bien quittter la fonction et detruire le thread exec.
 				}
+				ThreadMessage::StatusAll => {
+					print_status(&taskmaster, None);
+					let _ = sender.send(ThreadMessage::StatusDone);
+				}
 				ThreadMessage::Status(cmd) => {
-					println!("Status of program: {#}", prog_name);
-					if let Some(p) = taskmaster.programs.iter_mut().find(|p| p.config.0 == cmd) {
-							print_status(p);
-						}
-					else {
-						println!("Error: Program '{}' not found.", cmd);
-					}
+					exec::print_status(&taskmaster, Some(&cmd));
+            		let _ = sender.send(ThreadMessage::StatusDone);
 					// print_status() TODO
 				}
 				_ => println!("CACA"),
