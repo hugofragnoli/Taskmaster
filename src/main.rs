@@ -76,19 +76,22 @@ fn main_thread_entry(
 					}
 				}
 				["exit"] => {
-                    let res = sender.send(ThreadMessage::Exit);
+                    let _res = sender.send(ThreadMessage::Exit);
                     println!("Commande exit sent...");
                     sleep(Duration::from_secs(1)); // Sleep en attendant quon ferme tout ? 
                     break;
 				}
-				["status", follow_status@ ..] => {
-					for prog_name in follow_starts {
-						let res = sender.send(ThreadMessage::StatusAll);
-				}
 				["status"] => {
-                    let res = sender.send(ThreadMessage::Status(prog_name.to_string()));
+                    let _res = sender.send(ThreadMessage::StatusAll);
                     println!("status request sent...");
+					let _ = receiver.recv();
                 }
+				["status", follow_status@ ..] => {
+					for prog_name in follow_status {
+						let _res = sender.send(ThreadMessage::Status(prog_name.to_string()));
+					}
+				let _ = receiver.recv();
+				}
                 _ => {
                     if !cmd.trim().is_empty() {
                         println!("Error : Invalid command or missing argument(s) : {}", cmd);

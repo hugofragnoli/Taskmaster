@@ -9,6 +9,7 @@ pub enum ThreadMessage {
 	// messages envoye par le thread exec
 	StatusDone, // reponse du thread exec pour dire qu'il a print le status
 	ExitDone,   // reponse du thread exec pour dire qu'il a quitter
+	ActionDone, // reponse du thread a start / stop / restart.
 }
 
 // exec
