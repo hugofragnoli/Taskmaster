@@ -12,12 +12,3 @@ pub enum ThreadMessage {
 	ActionDone, // reponse du thread a start / stop / restart.
 }
 
-// exec
-// loop {
-// if !tunnel.empty() {
-// match tunnel.pop() {
-//
-// }
-// }
-
-// }

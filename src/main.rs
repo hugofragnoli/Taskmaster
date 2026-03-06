@@ -12,7 +12,7 @@ mod taskmasterctl;
 //use config::parser::parse_config;
 use crate::config::structs::Taskmaster;
 use crate::{communication::ThreadMessage, config::parser::parse_config};
-use exec::{start_prog, check_process_status, print_status};
+use exec::{start_prog, stop_prog, check_process_status, print_status};
 use rustyline::Cmd;
 use taskmasterctl::read_history::read_command;
 use taskmasterctl::read_history::setup_shell;
@@ -39,8 +39,24 @@ fn exec_thread_entry(
 					}
 					let _ = sender.send(ThreadMessage::ActionDone);
 				}
+                ThreadMessage::Stop(cmd) => {
+                    if let Some(p) = taskmaster.programs.iter_mut().find(|p| p.config.0 == cmd) {
+						if !p.childs.is_empty() {
+							stop_prog(p);
+						}
+					} else {
+						println!("Error: Program '{}' not found.", cmd);
+					}
+					let _ = sender.send(ThreadMessage::ActionDone);
+                }
 				ThreadMessage::Exit => {
 					println!("exiting...");
+                    for program in taskmaster.programs.iter_mut() {
+                        for p in program.childs.iter_mut() {
+                            let _ = p.kill();
+                            let _ = p.wait();
+                        }
+                    }
 					return; //return plutot que break pour bien quittter la fonction et detruire le thread exec.
 				}
 				ThreadMessage::StatusAll => {
@@ -57,7 +73,7 @@ fn exec_thread_entry(
 						if p.childs.is_empty() {
 							println!("Program : '{}' already off.", cmd);
 						} else {
-							//stop_prog(p); //TODO
+							stop_prog(p); //TODO
 							start_prog(p);
 						}
 					} else {
@@ -88,6 +104,12 @@ fn main_thread_entry(
                     for prog_name in follow_starts {
                         let res = sender.send(ThreadMessage::Start(prog_name.to_string()));
 					println!("Command start sent: {:?}", res);
+					}
+				}
+                ["stop", follow_starts @ ..] => {
+                    for prog_name in follow_starts {
+                        let res = sender.send(ThreadMessage::Stop(prog_name.to_string()));
+					println!("Command stop sent: {:?}", res);
 					}
 				}
 				["exit"] => {

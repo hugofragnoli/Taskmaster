@@ -10,11 +10,17 @@ pub fn setup_shell(history_path: &str) -> Result <DefaultEditor> {
     Ok(rl)
 }
 
-//Option : retourne some("qqchose") si user tjrs la.
+const BLUE: &str = "\x1b[34m";
+const RED: &str = "\x1b[31m";
+const RESET: &str = "\x1b[0m";
+
+const PROMPT: &str = "\x1b[34mtask\x1b[0mmas\x1b[31mter >\x1b[0m";
+
+// Option : retourne some("qqchose") si user tjrs la.
 // None si user plus la
 pub fn read_command(rl: &mut DefaultEditor) -> Option<String> {
-    let prompt = "\x01\x1b[94m\x02task\x01\x1b[97m\x02mas\x01\x1b[91m\x02ter > \x01\x1b[0m\x02";
-    match rl.readline(prompt) {
+    // let prompt = "\x01\x1b[94m\x02task\x01\x1b[97m\x02mas\x01\x1b[91m\x02ter > \x01\x1b[0m\x02";
+    match rl.readline(PROMPT) {
         Ok(line) => {
             let trimmed = line.trim();
             
