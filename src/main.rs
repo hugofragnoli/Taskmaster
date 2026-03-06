@@ -41,6 +41,16 @@ fn exec_thread_entry(
 					println!("exiting...");
 					return; //break plutot que return pour bien quittter la fonction et detruire le thread exec.
 				}
+				ThreadMessage::Status(cmd) => {
+					println!("Status of program: {#}", prog_name);
+					if let Some(p) = taskmaster.programs.iter_mut().find(|p| p.config.0 == cmd) {
+							print_status(p);
+						}
+					else {
+						println!("Error: Program '{}' not found.", cmd);
+					}
+					// print_status() TODO
+				}
 				_ => println!("CACA"),
 			}
 		}
@@ -72,8 +82,12 @@ fn main_thread_entry(
                     sleep(Duration::from_secs(1)); // Sleep en attendant quon ferme tout ? 
                     break;
 				}
+				["status", follow_status@ ..] => {
+					for prog_name in follow_starts {
+						let res = sender.send(ThreadMessage::StatusAll);
+				}
 				["status"] => {
-                    // C'est ici qu'on enverra ThreadMessage::StatusAll 
+                    let res = sender.send(ThreadMessage::Status(prog_name.to_string()));
                     println!("status request sent...");
                 }
                 _ => {
