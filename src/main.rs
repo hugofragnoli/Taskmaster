@@ -13,6 +13,7 @@ mod taskmasterctl;
 use crate::config::structs::Taskmaster;
 use crate::{communication::ThreadMessage, config::parser::parse_config};
 use exec::{start_prog, check_process_status, print_status};
+use rustyline::Cmd;
 use taskmasterctl::read_history::read_command;
 use taskmasterctl::read_history::setup_shell;
 
@@ -36,10 +37,11 @@ fn exec_thread_entry(
 					} else {
 						println!("Error: Program '{}' not found.", cmd);
 					}
+					let _ = sender.send(ThreadMessage::ActionDone);
 				}
 				ThreadMessage::Exit => {
 					println!("exiting...");
-					return; //break plutot que return pour bien quittter la fonction et detruire le thread exec.
+					return; //return plutot que break pour bien quittter la fonction et detruire le thread exec.
 				}
 				ThreadMessage::StatusAll => {
 					print_status(&taskmaster, None);
@@ -49,6 +51,19 @@ fn exec_thread_entry(
 					exec::print_status(&taskmaster, Some(&cmd));
             		let _ = sender.send(ThreadMessage::StatusDone);
 					// print_status() TODO
+				}
+				ThreadMessage::Restart(cmd) => {
+					if let Some(p) = taskmaster.programs.iter_mut().find(|p| p.config.0 == cmd) {
+						if p.childs.is_empty() {
+							println!("Program : '{}' already off.", cmd);
+						} else {
+							//stop_prog(p); //TODO
+							start_prog(p);
+						}
+					} else {
+						println!("Error: Program '{}' not found.", cmd);
+					}
+					let _ = sender.send(ThreadMessage::ActionDone);
 				}
 				_ => println!("CACA"),
 			}
@@ -69,7 +84,7 @@ fn main_thread_entry(
 			let splitted: Vec<&str> = cmd.split_whitespace().collect();
             //ajout du sighandler TODO
             match &splitted[..] {
-                ["start" | "restart", follow_starts @ ..] => {
+                ["start", follow_starts @ ..] => {
                     for prog_name in follow_starts {
                         let res = sender.send(ThreadMessage::Start(prog_name.to_string()));
 					println!("Command start sent: {:?}", res);
@@ -80,6 +95,12 @@ fn main_thread_entry(
                     println!("Commande exit sent...");
                     sleep(Duration::from_secs(1)); // Sleep en attendant quon ferme tout ? 
                     break;
+				}
+				["restart", follow_starts @ ..] => {
+                    for prog_name in follow_starts {
+                        let res = sender.send(ThreadMessage::Restart(prog_name.to_string()));
+					println!("Command restart sent: {:?}", res);
+					}
 				}
 				["status"] => {
                     let _res = sender.send(ThreadMessage::StatusAll);
