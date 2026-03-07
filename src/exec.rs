@@ -60,21 +60,33 @@ pub fn start_prog(program: &mut Program) {
 	let args = &program.config.1; // "toute la conf"
 	let split_args: Vec<&str> = args.cmd.split_whitespace().collect();
 	if let Some(binary) = split_args.first() {
+        let num_procs = args.num_processes;
+        for i in 0..num_procs {
+            // On prépare une NOUVELLE commande pour chaque itération
+            let mut cmd = Command::new(binary);
+            cmd.args(&split_args[1..]);
+        
 		// binary = le nom du binaire quon veut lancer.
 
+        if let Some(ref dir) = args.working_dir {
+            cmd.current_dir(dir);
+        }
+
+        if let Some(ref envs) = args.env_to_set {
+            cmd.envs(envs);
+        }
 		let logfile_name = format!("{}.txt", prog_name);
 		let logfile = File::create(&logfile_name).expect("failed to create file");
-		match Command::new(binary)
-            .stdout(logfile)
-            .args(&split_args[1..])
-            .spawn()
-		{
+        cmd.stdout(logfile);
+		match cmd.spawn() 
+		    {
 			Ok(child) => {
 				println!("Program [{}] launch with PID {}", prog_name, child.id());
 				program.childs.push(child);
 			}
 			Err(e) => println!("Error during program [{}] launch : {}", prog_name, e),
-		}
+		    }
+        }
 	}
 }
 
