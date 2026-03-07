@@ -64,7 +64,7 @@ fn exec_thread_entry(
 					let _ = sender.send(ThreadMessage::StatusDone);
 				}
 				ThreadMessage::Status(cmd) => {
-					exec::print_status(&taskmaster, Some(&cmd));
+					print_status(&taskmaster, Some(&cmd));
             		let _ = sender.send(ThreadMessage::StatusDone);
 					// print_status() TODO
 				}
