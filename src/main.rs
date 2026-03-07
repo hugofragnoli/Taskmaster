@@ -23,7 +23,14 @@ fn exec_thread_entry(
 	sender: std::sync::mpsc::Sender<communication::ThreadMessage>,
 	mut taskmaster: Taskmaster,
 ) {
-	loop {
+	// Boucle pour lancer les progs en autostart true
+	for program in &mut taskmaster.programs {
+    	if program.config.1.autostart {
+        	println!("Le programme {} doit démarrer automatiquement !", program.config.0);
+            start_prog(program);
+    	}
+	}
+	loop{
 		// handling messages
 		while let Ok(msg) = receiver.try_recv() {
 			match msg {
