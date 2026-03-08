@@ -1,6 +1,6 @@
 use std::{
-	fs::File,
 	process::Command,
+    fs::OpenOptions,
 };
 
 use crate::config::structs::{Program, Taskmaster, _Restart};
@@ -40,8 +40,10 @@ pub fn print_status(taskmaster: &Taskmaster, target_prog: Option<&str>) {
 	for program in &taskmaster.programs {
         let prog_name = &program.config.0;
 
-        if let Some(target) = target_prog && prog_name != target {
-            continue;
+        if let Some(target) = target_prog {
+            if prog_name != target {
+                continue;
+            }
         }
 
 		let is_running = !program.childs.is_empty();
@@ -76,7 +78,12 @@ pub fn start_prog(program: &mut Program) {
             cmd.envs(envs);
         }
 		let logfile_name = format!("{}.txt", prog_name);
-		let logfile = File::create(&logfile_name).expect("failed to create file");
+        //openoptions permet de lui dire dappend plutot que decrire par dessus si on lance 4 proc en mm temps par ex
+		let logfile = OpenOptions::new()
+            .create(true)
+            .append(true) // <--- Crucial pour ne pas effacer les logs des autres instances
+            .open(&logfile_name)
+            .expect("failed to open log file");
         cmd.stdout(logfile);
 		match cmd.spawn() 
 		    {
@@ -121,6 +128,7 @@ pub fn check_process_status(taskmaster: &mut Taskmaster) {
                 
                 if should_restart {
                     println!("[{}] Restart policy active. Relaunching...", prog_name);
+                    
                 }
                 false
                 // Le process est mort, on le retire de la liste des vivantss
@@ -133,5 +141,11 @@ pub fn check_process_status(taskmaster: &mut Taskmaster) {
                 false
             }
 		});
+
+        if program.childs.len() < config.num_processes as usize {
+            if let _Restart::Always = config.restart_policy {
+                 start_prog(program);
+            }
+        }
 	}
 }
