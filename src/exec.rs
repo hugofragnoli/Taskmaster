@@ -3,7 +3,7 @@ use std::{
 	process::Command,
 };
 
-use crate::config::structs::{Program, Taskmaster};
+use crate::config::structs::{Program, Taskmaster, _Restart};
 
 // extern crate libc;
 
@@ -103,14 +103,27 @@ pub fn stop_prog(program: &mut Program) {
 }
 
 pub fn check_process_status(taskmaster: &mut Taskmaster) {
-	//ADAPTATION POUR COLLER A la struct des threads en cours
+
+
 	for program in &mut taskmaster.programs {
         let prog_name = &program.config.0.clone();
+        let config = &program.config.1;
 		program.childs.retain_mut(|child| match child.try_wait() {
 			Ok(Some(status)) => {
+                let exit_code = status.code();
                 println!("[{}] has stopped with status: {}", prog_name, status);
-                // TODO plus tard: C'est ici qu'on gérera le "restart_always"
-                false // Le process est mort, on le retire de la liste des vivantss
+
+                let should_restart = match config.restart_policy {
+                    _Restart::Always => true,
+                    _Restart::Never => false,
+                    _Restart::UnexpectedExits => false,
+                };
+                
+                if should_restart {
+                    println!("[{}] Restart policy active. Relaunching...", prog_name);
+                }
+                false
+                // Le process est mort, on le retire de la liste des vivantss
             }
             Ok(None) => {
                 true // Le process tourne encore, on le garde
