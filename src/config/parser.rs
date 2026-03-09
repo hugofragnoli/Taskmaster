@@ -43,7 +43,7 @@ pub fn parse_config() -> Taskmaster {
 							config: (p.1.0.clone(), p.1.1.clone()),
 							childs: Vec::new(),
 							retry_count: 0,
-							last_launch_time: Instant::now();
+							last_launch_time: Instant::now(),
 						});
 					}
 					tm

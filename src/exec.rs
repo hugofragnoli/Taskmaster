@@ -3,8 +3,7 @@ use std::{
     fs::OpenOptions,
 };
 
-use std::thread::sleep;
-use std::time::Duration;
+use std::time::Instant;
 
 use crate::config::structs::{Program, Taskmaster, _Restart};
 
@@ -52,9 +51,9 @@ pub fn print_status(taskmaster: &Taskmaster, target_prog: Option<&str>) {
 		let is_running = !program.childs.is_empty();
 		let pids: Vec<u32> = program.childs.iter().map(|c| c.id()).collect();
 		if is_running {
-            println!("[STATUS] {} est EN COURS (PIDs: {:?})", prog_name, pids);
+            println!("[STATUS] {} is alive (PIDs: {:?})", prog_name, pids);
         } else {
-            println!("[STATUS] {} est ARRÊTÉ", prog_name);
+            println!("[STATUS] {} is off", prog_name);
         }
 	}
 }
@@ -64,6 +63,7 @@ pub fn start_prog(program: &mut Program) {
 	let prog_name = &program.config.0; // "nom du prog bg"
 	let args = &program.config.1; // "toute la conf"
 	let split_args: Vec<&str> = args.cmd.split_whitespace().collect();
+    program.last_launch_time = Instant::now();
 	if let Some(binary) = split_args.first() {
         let mut cmd = Command::new(binary);
         cmd.args(&split_args[1..]);
@@ -81,7 +81,7 @@ pub fn start_prog(program: &mut Program) {
         //openoptions permet de lui dire dappend plutot que decrire par dessus si on lance 4 proc en mm temps par ex
 		let logfile = OpenOptions::new()
             .create(true)
-            .append(true) // <--- Crucial pour ne pas effacer les logs des autres instances
+            .append(true) 
             .open(&logfile_name)
             .expect("failed to open log file");
         
@@ -103,10 +103,30 @@ pub fn stop_prog(program: &mut Program) {
         let result = child.kill();
         // wait necessaire pour tuer le process jsp pourquoi ??
         // kill seul envoi le signal mais si on wait pas ca marche pas
-        child.wait().expect("Impossible de tuer le processus");
+        child.wait().expect("Unable to kill process");
         println!("{:?}", result);
     }
     program.childs.clear();
+}
+
+fn should_relaunch(program: &Program) -> bool {
+    let config = &program.config.1;
+
+    if let _Restart::Never = config.restart_policy {
+        return false;
+    }
+
+    if program.retry_count >= config.max_relauch_retry {
+        //  print une seule fois que c'est errorfatal ???
+        return false;
+    }
+
+    let wait_time = config.minimum_runtime.unwrap_or(1);
+    if program.last_launch_time.elapsed().as_secs() < wait_time {
+        return false; //attends encore 
+    }
+
+    true
 }
 
 pub fn check_process_status(taskmaster: &mut Taskmaster) {
@@ -118,18 +138,13 @@ pub fn check_process_status(taskmaster: &mut Taskmaster) {
                 let exit_code = status.code();
                 println!("[{}] has stopped with status: {}", prog_name, status);
 
-                let should_restart = match config.restart_policy {
-                    _Restart::Always => true,
-                    _Restart::Never => false,
-                    _Restart::UnexpectedExits => false,
-                };
-                
-                if should_restart {
-                    println!("[{}] Restart policy active. Relaunching...", prog_name);
-                    
+                if program.last_launch_time.elapsed().as_secs() < config.minimum_runtime.unwrap_or(1) {
+                    program.retry_count += 1;
+                } else {
+                    program.retry_count = 0; // Il a vécu assez longtemps, on reset
                 }
                 false
-                // Le process est mort, on le retire de la liste des vivantss
+                // Le process est mort, on le retire de la liste des vivant(e)s
             }
             Ok(None) => {
                 true // Le process tourne encore, on le garde
@@ -141,10 +156,9 @@ pub fn check_process_status(taskmaster: &mut Taskmaster) {
 		});
 
         if program.childs.len() < config.num_processes as usize {
-            if let _Restart::Always = config.restart_policy {
-                let wait_time = config.minimum_runtime.unwrap_or(1);
-                println!("[{}] Waiting {}s before relaunch", prog_name, wait_time);
-                sleep(Duration::from_secs(wait_time));
+            if should_relaunch(program) {
+                println!("[{}] Relaunching (Attempt {}/{})", 
+                    prog_name, program.retry_count + 1, config.max_relauch_retry);
                 start_prog(program);
             }
         }
