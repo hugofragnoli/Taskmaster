@@ -3,6 +3,9 @@ use std::{
     fs::OpenOptions,
 };
 
+use std::thread::sleep;
+use std::time::Duration;
+
 use crate::config::structs::{Program, Taskmaster, _Restart};
 
 // extern crate libc;
@@ -81,6 +84,7 @@ pub fn start_prog(program: &mut Program) {
             .append(true) // <--- Crucial pour ne pas effacer les logs des autres instances
             .open(&logfile_name)
             .expect("failed to open log file");
+        
         cmd.stdout(logfile);
 		match cmd.spawn() 
 		    {
@@ -140,7 +144,10 @@ pub fn check_process_status(taskmaster: &mut Taskmaster) {
 
         if program.childs.len() < config.num_processes as usize {
             if let _Restart::Always = config.restart_policy {
-                 start_prog(program);
+                let wait_time = config.minimum_runtime.unwrap_or(1);
+                println!("[{}] Waiting {}s before relaunch", prog_name, wait_time);
+                sleep(Duration::from_secs(wait_time));
+                start_prog(program);
             }
         }
 	}

@@ -23,7 +23,6 @@ fn exec_thread_entry(
 	sender: std::sync::mpsc::Sender<communication::ThreadMessage>,
 	mut taskmaster: Taskmaster,
 ) {
-	// Boucle pour lancer les progs en autostart true
 	for program in &mut taskmaster.programs {
 		if program.config.1.autostart {
 			for _ in 0..program.config.1.num_processes {
@@ -39,7 +38,7 @@ fn exec_thread_entry(
 					if let Some(p) = taskmaster.programs.iter_mut().find(|p| p.config.0 == cmd) {
 						if !p.childs.is_empty() {
 							println!("Program : '{}' already running.", cmd);
-						} 
+						}
 						else {
 							start_prog(p); 
 						}
@@ -75,14 +74,13 @@ fn exec_thread_entry(
 				ThreadMessage::Status(cmd) => {
 					print_status(&taskmaster, Some(&cmd));
             		let _ = sender.send(ThreadMessage::StatusDone);
-					// print_status() TODO
 				}
 				ThreadMessage::Restart(cmd) => {
 					if let Some(p) = taskmaster.programs.iter_mut().find(|p| p.config.0 == cmd) {
 						if p.childs.is_empty() {
 							println!("Program : '{}' already off.", cmd);
 						} else {
-							stop_prog(p); //TODO
+							stop_prog(p);
 							start_prog(p);
 						}
 					} else {
