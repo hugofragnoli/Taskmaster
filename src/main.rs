@@ -25,10 +25,11 @@ fn exec_thread_entry(
 ) {
 	// Boucle pour lancer les progs en autostart true
 	for program in &mut taskmaster.programs {
-    	if program.config.1.autostart {
-        	println!("Le programme {} doit démarrer automatiquement !", program.config.0);
-            start_prog(program);
-    	}
+		if program.config.1.autostart {
+			for _ in 0..program.config.1.num_processes {
+				start_prog(program);
+			}
+		}
 	}
 	loop{
 		// handling messages
@@ -38,7 +39,8 @@ fn exec_thread_entry(
 					if let Some(p) = taskmaster.programs.iter_mut().find(|p| p.config.0 == cmd) {
 						if !p.childs.is_empty() {
 							println!("Program : '{}' already running.", cmd);
-						} else {
+						} 
+						else {
 							start_prog(p); 
 						}
 					} else {

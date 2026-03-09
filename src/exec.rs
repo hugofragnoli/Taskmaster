@@ -62,12 +62,9 @@ pub fn start_prog(program: &mut Program) {
 	let args = &program.config.1; // "toute la conf"
 	let split_args: Vec<&str> = args.cmd.split_whitespace().collect();
 	if let Some(binary) = split_args.first() {
-        let num_procs = args.num_processes;
-        for i in 0..num_procs {
-            // On prépare une NOUVELLE commande pour chaque itération
-            let mut cmd = Command::new(binary);
-            cmd.args(&split_args[1..]);
-        
+        let mut cmd = Command::new(binary);
+        cmd.args(&split_args[1..]);
+    
 		// binary = le nom du binaire quon veut lancer.
 
         if let Some(ref dir) = args.working_dir {
@@ -95,7 +92,6 @@ pub fn start_prog(program: &mut Program) {
 		    }
         }
 	}
-}
 
 pub fn stop_prog(program: &mut Program) {
     for child in &mut program.childs {
