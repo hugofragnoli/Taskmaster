@@ -3,6 +3,7 @@ use std::{env, fs::File, process::exit};
 use crate::error;
 
 use serde_yaml::from_reader;
+use std::time::Instant;
 
 use crate::config::structs::{Program, ProgramsConfig, Taskmaster};
 
@@ -41,6 +42,8 @@ pub fn parse_config() -> Taskmaster {
 						tm.programs.push(Program {
 							config: (p.1.0.clone(), p.1.1.clone()),
 							childs: Vec::new(),
+							retry_count: 0,
+							last_launch_time: Instant::now();
 						});
 					}
 					tm

@@ -16,7 +16,7 @@ programs:
       stderr: "/tmp/ping1_stderr.txt"
     env_to_set:
       chien: "chat"
-    working_dir: "/home"
+    working_dir: "/Users/hugofragnoli/Prog/42/"
   ls1:
     cmd: "ls"
     num_processes: 1

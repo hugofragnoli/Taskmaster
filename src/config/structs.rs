@@ -57,6 +57,8 @@ pub struct ProgramsConfig {
 pub struct Program {
 	pub config: (String, ProgramConfig2),
 	pub childs: Vec<Child>,
+	pub retry_count: u32,
+	pub last_launch_time: std::time::Instant,
 }
 
 #[derive(Debug)]

@@ -110,8 +110,6 @@ pub fn stop_prog(program: &mut Program) {
 }
 
 pub fn check_process_status(taskmaster: &mut Taskmaster) {
-
-
 	for program in &mut taskmaster.programs {
         let prog_name = &program.config.0.clone();
         let config = &program.config.1;
