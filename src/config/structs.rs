@@ -70,6 +70,8 @@ pub struct Taskmaster {
 	pub programs: Vec<Program>,
 }
 
+/// custom deserializer for umask option
+/// deserialize to u16 if the user put 0o022 or "022" in the config file
 fn deserialize_umask<'de, D>(deserializer: D) -> Result<Option<u16>, D::Error>
 where
 	D: Deserializer<'de>,
