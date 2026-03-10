@@ -1,6 +1,9 @@
 use std::{collections::HashMap, process::Child};
 
-use serde::{Deserialize, Serialize};
+use serde::{
+	Deserialize, Deserializer, Serialize,
+	de::{self, Error},
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum _Restart {
@@ -45,7 +48,8 @@ pub struct ProgramConfig2 {
 	pub redirect: Option<Redirect>,                  // redirect stdout/stderr to file or to trash if None
 	pub env_to_set: Option<HashMap<String, String>>, // env var to set
 	pub working_dir: Option<String>,                 // working directory to set
-	pub umask: Option<u16>,                          // umask to set before starting
+	#[serde(default, deserialize_with = "deserialize_umask")]
+	pub umask: Option<u16>, // umask to set before starting
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -64,4 +68,25 @@ pub struct Program {
 #[derive(Debug)]
 pub struct Taskmaster {
 	pub programs: Vec<Program>,
+}
+
+fn deserialize_umask<'de, D>(deserializer: D) -> Result<Option<u16>, D::Error>
+where
+	D: Deserializer<'de>,
+{
+	#[derive(Deserialize)]
+	#[serde(untagged)]
+	enum UmaskConfig {
+		Str(String),
+		Int(u16),
+	}
+
+	match Option::<UmaskConfig>::deserialize(deserializer)? {
+		Some(UmaskConfig::Str(s)) => {
+			let clean_s = s.trim_start_matches("0o");
+			u16::from_str_radix(clean_s, 8).map(Some).map_err(Error::custom)
+		}
+		Some(UmaskConfig::Int(i)) => Ok(Some(i)),
+		None => Ok(None),
+	}
 }

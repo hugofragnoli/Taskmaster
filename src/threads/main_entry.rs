@@ -135,6 +135,10 @@ pub fn main_thread_entry(
 						should_quit = handle_response(ThreadMessage::Status(prog_name.to_string()), received);
 					}
 				}
+
+				["clear"] => {
+					let _ = rl.clear_screen();
+				}
 				_ => {
 					if !cmd.trim().is_empty() {
 						println!("Error : Invalid command or missing argument(s) : {}", cmd);
