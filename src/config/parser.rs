@@ -27,7 +27,7 @@ pub fn parse_config() -> Taskmaster {
 	} else if args.len() == 2 {
 		path = args[1].clone();
 	} else {
-		path = String::from("configmael.yaml");
+		path = String::from("config.yaml");
 	}
 
 	let f = std::fs::File::open(&path);

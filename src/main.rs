@@ -10,11 +10,8 @@ mod threads;
 use threads::exec_entry::exec_thread_entry;
 use threads::main_entry::main_thread_entry;
 
-//use config::parser::parse_config;
 use crate::{communication::ThreadMessage, config::parser::parse_config};
 use taskmasterctl::read_history::setup_shell;
-
-//ajout de taskmaster en param pour recup du main.
 
 fn main() {
 	let taskmaster = parse_config();
