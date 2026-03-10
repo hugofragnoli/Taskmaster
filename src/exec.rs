@@ -1,4 +1,6 @@
+use std::io::Stderr;
 use std::os::unix::process::CommandExt;
+use std::process::Stdio;
 use std::{fs::OpenOptions, process::Command};
 
 use std::time::Instant;
@@ -94,15 +96,29 @@ pub fn start_prog(program: &mut Program) {
 			}
 		}
 
-		let logfile_name = format!("{}.txt", prog_name);
-		//openoptions permet de lui dire dappend plutot que decrire par dessus si on lance 4 proc en mm temps par ex
-		let logfile = OpenOptions::new()
-			.create(true)
-			.append(true)
-			.open(&logfile_name)
-			.expect("failed to open log file");
+		if let Some(redirect) = &args.redirect {
+			let stdout = redirect.stdout.clone();
+			let stderr = redirect.stderr.clone();
 
-		cmd.stdout(logfile);
+			//openoptions permet de lui dire dappend plutot que decrire par dessus si on lance 4 proc en mm temps par ex
+			let logfilestdout = OpenOptions::new()
+				.create(true)
+				.append(true)
+				.open(&stdout)
+				.expect("failed to open log file for stdout");
+
+			let logfilestderr = OpenOptions::new()
+				.create(true)
+				.append(true)
+				.open(&stderr)
+				.expect("failed to open log file for stderr");
+
+			cmd.stdout(logfilestdout);
+			cmd.stderr(logfilestderr);
+		} else {
+			cmd.stdout(Stdio::null());
+			cmd.stderr(Stdio::null());
+		}
 
 		match cmd.spawn() {
 			Ok(child) => {
