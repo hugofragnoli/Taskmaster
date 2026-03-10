@@ -1,11 +1,12 @@
-use std::{
-	process::Command,
-    fs::OpenOptions,
-};
+use std::os::unix::process::CommandExt;
+use std::{fs::OpenOptions, process::Command};
 
 use std::time::Instant;
 
-use crate::config::structs::{Program, Taskmaster, _Restart};
+use libc::umask;
+
+use crate::config::structs::{_Restart, Program, Taskmaster};
+use crate::{debug, error, info};
 
 // extern crate libc;
 
@@ -36,25 +37,25 @@ use crate::config::structs::{Program, Taskmaster, _Restart};
 // 	}
 // }
 
-//ici on met une option sur le target prog pour differencier le print de tous les status ou dun seul prog. 
+//ici on met une option sur le target prog pour differencier le print de tous les status ou dun seul prog.
 // si une target prog est fournie on compare pour print que ca.
 pub fn print_status(taskmaster: &Taskmaster, target_prog: Option<&str>) {
 	for program in &taskmaster.programs {
-        let prog_name = &program.config.0;
+		let prog_name = &program.config.0;
 
-        if let Some(target) = target_prog {
-            if prog_name != target {
-                continue;
-            }
-        }
+		if let Some(target) = target_prog {
+			if prog_name != target {
+				continue;
+			}
+		}
 
 		let is_running = !program.childs.is_empty();
 		let pids: Vec<u32> = program.childs.iter().map(|c| c.id()).collect();
 		if is_running {
-            println!("[STATUS] {} is alive (PIDs: {:?})", prog_name, pids);
-        } else {
-            println!("[STATUS] {} is off", prog_name);
-        }
+			info!("[STATUS] {} is alive (PIDs: {:?})", prog_name, pids);
+		} else {
+			info!("[STATUS] {} is off", prog_name);
+		}
 	}
 }
 
@@ -63,104 +64,124 @@ pub fn start_prog(program: &mut Program) {
 	let prog_name = &program.config.0; // "nom du prog bg"
 	let args = &program.config.1; // "toute la conf"
 	let split_args: Vec<&str> = args.cmd.split_whitespace().collect();
-    program.last_launch_time = Instant::now();
+
+	program.last_launch_time = Instant::now();
+
 	if let Some(binary) = split_args.first() {
-        let mut cmd = Command::new(binary);
-        cmd.args(&split_args[1..]);
-    
+		let mut cmd = Command::new(binary);
+		cmd.args(&split_args[1..]);
+
 		// binary = le nom du binaire quon veut lancer.
 
-        if let Some(ref dir) = args.working_dir {
-            cmd.current_dir(dir);
-        }
+		if let Some(ref dir) = args.working_dir {
+			cmd.current_dir(dir);
+		}
 
-        if let Some(ref envs) = args.env_to_set {
-            cmd.envs(envs);
-        }
+		if let Some(ref envs) = args.env_to_set {
+			cmd.envs(envs);
+		}
+
+		// 0666
+		// 0022
+		// 0644
+		// apply umask on child process
+		if let Some(mask_val) = args.umask {
+			unsafe {
+				cmd.pre_exec(move || {
+					umask(mask_val);
+					Ok(())
+				});
+			}
+		}
+
 		let logfile_name = format!("{}.txt", prog_name);
-        //openoptions permet de lui dire dappend plutot que decrire par dessus si on lance 4 proc en mm temps par ex
+		//openoptions permet de lui dire dappend plutot que decrire par dessus si on lance 4 proc en mm temps par ex
 		let logfile = OpenOptions::new()
-            .create(true)
-            .append(true) 
-            .open(&logfile_name)
-            .expect("failed to open log file");
-        
-        cmd.stdout(logfile);
-		match cmd.spawn() 
-		    {
+			.create(true)
+			.append(true)
+			.open(&logfile_name)
+			.expect("failed to open log file");
+
+		cmd.stdout(logfile);
+
+		match cmd.spawn() {
 			Ok(child) => {
-				println!("Program [{}] launch with PID {}", prog_name, child.id());
+				info!("Program [{}] launch with PID {}", prog_name, child.id());
 				program.childs.push(child);
 			}
-			Err(e) => println!("Error during program [{}] launch : {}", prog_name, e),
-		    }
-        }
+			Err(e) => error!("Error during program [{}] launch : {}", prog_name, e),
+		}
 	}
+}
 
 pub fn stop_prog(program: &mut Program) {
-    for child in &mut program.childs {
-        println!("trying to kill process");
-        let result = child.kill();
-        // wait necessaire pour tuer le process jsp pourquoi ??
-        // kill seul envoi le signal mais si on wait pas ca marche pas
-        child.wait().expect("Unable to kill process");
-        println!("{:?}", result);
-    }
-    program.childs.clear();
+	for child in &mut program.childs {
+		debug!("trying to kill process");
+		let result = child.kill();
+		// wait necessaire pour tuer le process jsp pourquoi ??
+		// kill seul envoi le signal mais si on wait pas ca marche pas
+		child.wait().expect("Unable to kill process");
+		println!("kill result: {:?}", result);
+	}
+	program.childs.clear();
 }
 
 fn should_relaunch(program: &Program) -> bool {
-    let config = &program.config.1;
+	let config = &program.config.1;
 
-    if let _Restart::Never = config.restart_policy {
-        return false;
-    }
+	if let _Restart::Never = config.restart_policy {
+		return false;
+	}
 
-    if program.retry_count >= config.max_relauch_retry {
-        //  print une seule fois que c'est errorfatal ???
-        return false;
-    }
+	if program.retry_count >= config.max_relauch_retry {
+		//  print une seule fois que c'est errorfatal ???
+		return false;
+	}
 
-    let wait_time = config.minimum_runtime.unwrap_or(1);
-    if program.last_launch_time.elapsed().as_secs() < wait_time {
-        return false; //attends encore 
-    }
+	let wait_time = config.minimum_runtime.unwrap_or(1);
+	if program.last_launch_time.elapsed().as_secs() < wait_time {
+		return false; //attends encore 
+	}
 
-    true
+	true
 }
 
 pub fn check_process_status(taskmaster: &mut Taskmaster) {
 	for program in &mut taskmaster.programs {
-        let prog_name = &program.config.0.clone();
-        let config = &program.config.1;
+		let prog_name = &program.config.0.clone();
+		let config = &program.config.1;
 		program.childs.retain_mut(|child| match child.try_wait() {
 			Ok(Some(status)) => {
-                let exit_code = status.code();
-                println!("[{}] has stopped with status: {}", prog_name, status);
+				let exit_code = status.code();
+				info!("[{}] has stopped with status: {}", prog_name, status);
 
-                if program.last_launch_time.elapsed().as_secs() < config.minimum_runtime.unwrap_or(1) {
-                    program.retry_count += 1;
-                } else {
-                    program.retry_count = 0; // Il a vécu assez longtemps, on reset
-                }
-                false
-                // Le process est mort, on le retire de la liste des vivant(e)s
-            }
-            Ok(None) => {
-                true // Le process tourne encore, on le garde
-            }
-            Err(e) => {
-                println!("Error while checking status of [{}]: {}", prog_name, e); // check qui fail.
-                false
-            }
+				if program.last_launch_time.elapsed().as_secs() < config.minimum_runtime.unwrap_or(1) {
+					program.retry_count += 1;
+				} else {
+					program.retry_count = 0; // Il a vécu assez longtemps, on reset
+				}
+				false
+				// Le process est mort, on le retire de la liste des vivant(e)s
+			}
+			Ok(None) => {
+				true // Le process tourne encore, on le garde
+			}
+			Err(e) => {
+				error!("Error while checking status of [{}]: {}", prog_name, e); // check qui fail.
+				false
+			}
 		});
 
-        if program.childs.len() < config.num_processes as usize {
-            if should_relaunch(program) {
-                println!("[{}] Relaunching (Attempt {}/{})", 
-                    prog_name, program.retry_count + 1, config.max_relauch_retry);
-                start_prog(program);
-            }
-        }
+		if program.childs.len() < config.num_processes as usize {
+			if should_relaunch(program) {
+				info!(
+					"[{}] Relaunching (Attempt {}/{})",
+					prog_name,
+					program.retry_count + 1,
+					config.max_relauch_retry
+				);
+				start_prog(program);
+			}
+		}
 	}
 }

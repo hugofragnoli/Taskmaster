@@ -45,7 +45,7 @@ pub struct ProgramConfig2 {
 	pub redirect: Option<Redirect>,                  // redirect stdout/stderr to file or to trash if None
 	pub env_to_set: Option<HashMap<String, String>>, // env var to set
 	pub working_dir: Option<String>,                 // working directory to set
-	pub umask: Option<u32>,                          // umask to set before starting
+	pub umask: Option<u16>,                          // umask to set before starting
 }
 
 #[derive(Debug, Serialize, Deserialize)]
