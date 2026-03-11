@@ -20,7 +20,7 @@ programs:
   ls1:
     cmd: "ls"
     num_processes: 1
-    autostart: true
+    autostart: false
     restart_policy: "Always"
     expected_error_codes:
       - 0
