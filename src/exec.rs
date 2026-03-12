@@ -104,15 +104,20 @@ pub fn start_prog(program: &mut Program) {
 }
 
 pub fn stop_prog(program: &mut Program) {
+	//On recup le signal de la config
+	let signal = program.config.1.stop_signal
+        .as_ref()
+        .map(|s| s.to_libc())
+        .unwrap_or(libc::SIGTERM); //sinn SIGTERM par defaut ? 
+
+	//on clear dans check process mtn.
 	for child in &mut program.childs {
-		debug!("trying to kill process");
-		let result = child.kill();
-		// wait necessaire pour tuer le process jsp pourquoi ??
-		// kill seul envoi le signal mais si on wait pas ca marche pas
-		child.wait().expect("Unable to kill process");
-		println!("kill result: {:?}", result);
-	}
-	program.childs.clear();
+        let pid = child.id() as i32;
+        unsafe {
+            libc::kill(pid, signal);
+        }
+        debug!("Sent signal {} to {}", signal, pid);
+    }
 }
 
 fn should_relaunch(program: &Program) -> bool {
