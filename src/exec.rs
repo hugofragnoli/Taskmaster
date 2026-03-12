@@ -10,34 +10,7 @@ use libc::umask;
 use crate::config::structs::{_Restart, Program, Taskmaster};
 use crate::{debug, error, info};
 
-// extern crate libc;
 
-// use libc::{F_VOLPOSMODE, signal};
-// use libc::{SIGINT, c_int, c_void};
-// use libc::{exit, sighandler_t};
-
-// fn get_handler() -> sighandler_t {
-// 	handler as extern "C" fn(c_int) as *mut c_void as sighandler_t
-// }
-
-// fn start_program(config: &mut MiniConfig) -> Child {
-// 	if config.redirect {
-// 		config.stdoutfile = format!("{}_stdout_log.txt", config.name);
-
-// 		let logfile = File::create(config.stdoutfile.clone()).expect("Failed to create logfile");
-
-// 		Command::new(&config.cmd[0])
-// 			.stdout(logfile)
-// 			.args(&config.cmd[1..])
-// 			.spawn()
-// 			.expect("failed to start process")
-// 	} else {
-// 		Command::new(&config.cmd[0])
-// 			.args(&config.cmd[1..])
-// 			.spawn()
-// 			.expect("failed to start process")
-// 	}
-// }
 
 //ici on met une option sur le target prog pour differencier le print de tous les status ou dun seul prog.
 // si une target prog est fournie on compare pour print que ca.

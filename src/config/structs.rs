@@ -1,4 +1,5 @@
 use std::{collections::HashMap, process::Child};
+use libc::{SIGINT, SIGTERM, SIGKILL, c_int};
 
 use serde::{
 	Deserialize, Deserializer, Serialize,
@@ -17,6 +18,17 @@ pub enum _Signalstopper {
 	Sigkill,
 	Sigterm,
 	Sigint,
+}
+
+//conversion en int comprehensible
+impl _Signalstopper {
+    pub fn to_libc(&self) -> c_int {
+        match self {
+            _Signalstopper::Sigint => SIGINT,
+            _Signalstopper::Sigterm => SIGTERM,
+            _Signalstopper::Sigkill => SIGKILL,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
