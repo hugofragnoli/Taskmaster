@@ -9,7 +9,7 @@ programs:
       - 2
     minimum_runtime: 5
     max_relauch_retry: 4
-    stop_signal: Sigterm
+    stop_signal: Sigint
     time_after_proper_stop: 10
     redirect:
       stdout: "ping1_stdout.txt"

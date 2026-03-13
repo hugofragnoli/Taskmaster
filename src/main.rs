@@ -16,7 +16,7 @@ use taskmasterctl::read_history::setup_shell;
 fn main() {
 	let taskmaster = parse_config();
 
-	println!("{:#?}", taskmaster);
+	//println!("{:#?}", taskmaster);
 
 	let path = "history.txt";
 
