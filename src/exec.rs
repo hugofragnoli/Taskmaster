@@ -113,11 +113,14 @@ pub fn stop_prog(program: &mut Program) {
 	//on clear dans check process mtn.
 	for child in &mut program.childs {
         let pid = child.id() as i32;
-        unsafe {
-            libc::kill(pid, signal);
+        let res = unsafe { libc::kill(pid, signal) };
+        
+        if res != 0 {
+            error!("[{}] Failed to send signal {} to pid {}", program.config.0, signal, pid);
+        } else {
+            debug!("[{}] Sent signal {} to pid {}", program.config.0, signal, pid);
         }
-        debug!("Sent signal {} to {}", signal, pid);
-    }
+	}
 }
 
 fn should_relaunch(program: &Program) -> bool {

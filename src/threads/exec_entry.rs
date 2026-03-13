@@ -79,9 +79,15 @@ pub fn exec_thread_entry(
 				ThreadMessage::Restart(cmd) => {
 					if let Some(p) = taskmaster.programs.iter_mut().find(|p| p.config.0 == cmd) {
 						if p.childs.is_empty() {
-							info!("Program : '{}' already off.", cmd);
+							info!("Program : '{}' already off, we gonna start only.", cmd);
+							start_prog(p);
 						} else {
 							stop_prog(p);
+
+							for child in &mut p.childs {
+								let _ = child.wait(); 
+							}
+							p.childs.clear();
 							start_prog(p);
 						}
 					} else {
