@@ -3,7 +3,7 @@ use std::time::Duration;
 use std::thread::sleep;
 
 use crate::{
-	communication::{self, ThreadMessage},
+	communication::{self, StopSig, ThreadMessage},
 	config::structs::Taskmaster,
 	debug, error,
 	exec::{check_process_status, print_status, start_prog, stop_prog},
@@ -46,7 +46,7 @@ pub fn exec_thread_entry(
 					}
 					let _ = sender.send(ThreadMessage::ActionDone);
 				}
-				ThreadMessage::Stop(cmd) => {
+				ThreadMessage::Stop(cmd, StopSig) => { // a finir
 					if let Some(p) = taskmaster.programs.iter_mut().find(|p| p.config.0 == cmd) {
 						if !p.childs.is_empty() {
 							stop_prog(p);
