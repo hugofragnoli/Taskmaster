@@ -1,21 +1,52 @@
 use std::{
-	sync::mpsc::{RecvTimeoutError, SendError},
-	thread::{Thread, sleep},
+	ffi::c_void,
+	sync::{
+		Mutex,
+		atomic::{AtomicBool, Ordering},
+		mpsc::{RecvTimeoutError, SendError},
+	},
+	thread::sleep,
 	time::Duration,
 };
 
+use libc::{SIGHUP, c_int, sighandler_t, signal};
+
 use crate::{
 	communication::{self, ThreadMessage},
+	config::parser::parse_config,
 	error, info,
 	taskmasterctl::read_history::read_command,
 };
 
+extern crate libc;
+
+// use libc::{ signal};
+// use libc::{SIGINT, c_int, c_void};
+// use libc::{exit, sighandler_t};
+
+/*
+* Global Var
+*/
+
+static SIGHUP_RECEIVED: Mutex<AtomicBool> = Mutex::new(AtomicBool::new(false));
+
+/*
+* Structs / enums
+*/
+
+/// Enum used to handle when the exec thread is stopped unexpectedly
 #[derive(Debug)]
 enum ThreadShoudQuit {
 	Yes,
 	No,
 }
 
+/*
+* Private Functions
+*/
+
+/// Used to handle when the exec thread is stopped unexpectedly
+/// Check all responses messages from exec_thread
 fn handle_response(
 	original_message: ThreadMessage,
 	response: Result<ThreadMessage, RecvTimeoutError>,
@@ -27,12 +58,13 @@ fn handle_response(
 		Err(RecvTimeoutError::Timeout) => {
 			error!("Unable to receive a response for {:?}. Reason: Timeout", original_message)
 		}
-		Err(RecvTimeoutError::Disconnected) => {
-			if ThreadMessage::Exit != original_message {
+		Err(RecvTimeoutError::Disconnected) => match original_message {
+			ThreadMessage::Exit => (),
+			_ => {
 				error!("Unable to receive a response for {:?}: Reason: Disconnected", original_message);
 				return ThreadShoudQuit::Yes;
 			}
-		}
+		},
 		_ => (),
 	}
 	ThreadShoudQuit::No
@@ -58,6 +90,52 @@ fn check_exec_ready(
 	}
 }
 
+extern "C" fn reload_handler(_: c_int) {
+	println!("Need to reload config");
+
+	SIGHUP_RECEIVED.lock().unwrap().store(true, Ordering::Relaxed);
+}
+
+fn get_handler() -> sighandler_t {
+	reload_handler as extern "C" fn(c_int) as *mut c_void as sighandler_t
+}
+
+fn setup_reload_handler() {
+	unsafe { signal(SIGHUP, get_handler()) };
+}
+
+fn should_reload(
+	receiver: &std::sync::mpsc::Receiver<communication::ThreadMessage>,
+	sender: &std::sync::mpsc::Sender<communication::ThreadMessage>,
+) {
+	let guard = SIGHUP_RECEIVED.lock().unwrap();
+	if guard.load(Ordering::Relaxed) {
+		info!("Reloading Config...");
+		let config = parse_config();
+		match config {
+			Ok(taskmaster) => {
+				let _ = sender.send(ThreadMessage::ReloadConfig(taskmaster));
+				info!("New config sent to exec thread");
+
+				let received = receiver.recv_timeout(Duration::from_secs(5));
+				match received {
+					Ok(ThreadMessage::ConfigReloaded) => info!("Config updated."),
+					Ok(ThreadMessage::ConfigReloadError(s)) => error!("Unable to reload config: {}", s),
+					_ => (),
+				}
+			}
+			Err(e) => {
+				error!("Unable to parse new config: {}", e);
+			}
+		}
+
+		guard.store(false, Ordering::Relaxed); // reset bool
+	}
+}
+/*
+* Public Functions
+*/
+
 /// Main loop of main thread
 /// read input and send instructions to exec thread via ThreadMessage enum
 pub fn main_thread_entry(
@@ -65,6 +143,8 @@ pub fn main_thread_entry(
 	sender: std::sync::mpsc::Sender<communication::ThreadMessage>,
 	mut rl: rustyline::Editor<(), rustyline::history::FileHistory>,
 ) -> Result<(), SendError<ThreadMessage>> {
+	setup_reload_handler();
+
 	if !check_exec_ready(&receiver, &sender) {
 		return Ok(());
 	}
@@ -72,6 +152,8 @@ pub fn main_thread_entry(
 
 	//copie de lancien handle_commands_sh
 	loop {
+		should_reload(&receiver, &sender);
+
 		let mut should_quit = ThreadShoudQuit::No;
 
 		if let Some(cmd) = read_command(&mut rl) {

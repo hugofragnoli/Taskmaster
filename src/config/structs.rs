@@ -1,40 +1,68 @@
 use std::{collections::HashMap, process::Child};
 
-use serde::{
-	Deserialize, Deserializer, Serialize,
-	de::{self, Error},
-};
+use serde::{Deserialize, Deserializer, Serialize, de::Error};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
 pub enum _Restart {
 	Always,
 	Never,
 	UnexpectedExits,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+// https://faculty.cs.niu.edu/~hutchins/csci480/signals.htm
+#[allow(clippy::upper_case_acronyms)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
 pub enum _Signalstopper {
-	Sigkill,
-	Sigterm,
-	Sigint,
+	SIGHUP, // reload config
+	SIGINT,
+	SIGQUIT,
+	SIGILL,
+	SIGTRAP,
+	SIGABRT,
+	SIGIOT,
+	SIGBUS,
+	SIGFPE,
+	SIGKILL,
+	SIGUSR1,
+	SIGSEGV,
+	SIGUSR2,
+	SIGPIPE,
+	SIGALRM,
+	SIGTERM,
+	SIGSTKFLT,
+	SIGCHLD,
+	SIGCONT,
+	SIGSTOP,
+	SIGTSTP,
+	SIGTTIN,
+	SIGTTOU,
+	SIGURG,
+	SIGXCPU,
+	SIGXFSZ,
+	SIGVTALRM,
+	SIGPROF,
+	SIGWINCH,
+	SIGIO,
+	SIGPOLL,
+	SIGPWR,
+	SIGSYS,
+	SIGUNUSED,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum _Discardoptions {
-	Stdin,
-	Stdout,
-	Stderr,
-	FilePath,
+impl From<u32> for _Signalstopper {
+	fn from(value: u32) -> Self {
+		todo!()
+	}
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Redirect {
 	// filepaths
 	pub stdout: String,
 	pub stderr: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
 pub struct ProgramConfig2 {
 	pub cmd: String,                                 // command to run
 	pub num_processes: u32,                          // process to start and keep running
@@ -52,13 +80,14 @@ pub struct ProgramConfig2 {
 	pub umask: Option<u16>, // umask to set before starting
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProgramsConfig {
 	pub programs: HashMap<String, ProgramConfig2>,
 }
 
 #[derive(Debug)]
 pub struct Program {
+	// (name of program, config of program)
 	pub config: (String, ProgramConfig2),
 	pub childs: Vec<Child>,
 	pub retry_count: u32,
@@ -68,6 +97,7 @@ pub struct Program {
 #[derive(Debug)]
 pub struct Taskmaster {
 	pub programs: Vec<Program>,
+	pub config_file: String,
 }
 
 /// custom deserializer for umask option

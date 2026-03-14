@@ -1,4 +1,3 @@
-use std::io::Stderr;
 use std::os::unix::process::CommandExt;
 use std::process::Stdio;
 use std::{fs::OpenOptions, process::Command};
@@ -45,10 +44,8 @@ pub fn print_status(taskmaster: &Taskmaster, target_prog: Option<&str>) {
 	for program in &taskmaster.programs {
 		let prog_name = &program.config.0;
 
-		if let Some(target) = target_prog {
-			if prog_name != target {
+		if let Some(target) = target_prog && prog_name != target {
 				continue;
-			}
 		}
 
 		let is_running = !program.childs.is_empty();
@@ -90,7 +87,7 @@ pub fn start_prog(program: &mut Program) {
 		if let Some(mask_val) = args.umask {
 			unsafe {
 				cmd.pre_exec(move || {
-					umask(mask_val);
+					umask(mask_val.into());
 					Ok(())
 				});
 			}

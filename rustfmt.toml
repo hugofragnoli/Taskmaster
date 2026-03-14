@@ -9,3 +9,6 @@ fn_call_width = 80
 
 # small match on one line
 short_array_element_width_threshold = 50
+
+hard_tabs = true
+tab_spaces = 4
