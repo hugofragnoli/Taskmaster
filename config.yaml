@@ -9,7 +9,7 @@ programs:
       - 2
     minimum_runtime: 5
     max_relauch_retry: 4
-    stop_signal: Sigterm
+    stop_signal: SIGTERM
     time_after_proper_stop: 10
     redirect:
       stdout: "ping1_stdout.txt"
@@ -18,7 +18,7 @@ programs:
       chien: "chat"
     umask: 022
   env1:
-    cmd: "./testprogs/env"
+    cmd: "./testprogs/envaaa"
     num_processes: 1
     autostart: false
     restart_policy: "Never"
@@ -26,7 +26,7 @@ programs:
       - 0
     minimum_runtime: 5
     max_relauch_retry: 4
-    stop_signal: Sigterm
+    stop_signal: SIGTERM
     time_after_proper_stop: 10
     env_to_set:
       chien: "chat"
