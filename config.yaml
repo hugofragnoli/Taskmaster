@@ -3,7 +3,7 @@ programs:
     cmd: "ping google.com"
     num_processes: 2
     autostart: true
-    restart_policy: "Always"
+    restart_policy: "Never"
     expected_error_codes:
       - 0
       - 2

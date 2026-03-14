@@ -15,25 +15,25 @@ const PROMPT: &str = "\x1b[34mtask\x1b[0mmas\x1b[31mter >\x1b[0m";
 // Option : retourne some("qqchose") si user tjrs la.
 // None si user plus la
 pub fn read_command(rl: &mut DefaultEditor) -> Option<String> {
-	// let prompt = "\x01\x1b[94m\x02task\x01\x1b[97m\x02mas\x01\x1b[91m\x02ter > \x01\x1b[0m\x02";
-	match rl.readline(PROMPT) {
-		Ok(line) => {
-			let trimmed = line.trim();
-
-			if !trimmed.is_empty() {
-				let _ = rl.add_history_entry(trimmed); //stocke dans la RAM. 
-			}
-			// println!("{}", trimmed.to_string()); DEBUG BG
-			//retour  sous forme de stringgg d'anas
-			Some(trimmed.to_string())
-		}
-		Err(ReadlineError::Interrupted) | Err(ReadlineError::Eof) => {
-			eprintln!("Ctrl+c or EOF detected");
-			None
-		}
-		Err(err) => {
-			eprintln!("Error : {:#?}", err);
-			None
-		}
-	}
+    match rl.readline(PROMPT) {
+        Ok(line) => {
+            let trimmed = line.trim();
+            if !trimmed.is_empty() {
+                let _ = rl.add_history_entry(trimmed);
+            }
+            Some(trimmed.to_string())
+        }
+        Err(ReadlineError::Eof) => {
+            println!("Use 'exit' to quit");
+            Some("".to_string()) // en gros faut renvoyer ca plutot que None sinon on transmet rien et on sort de la boucle.
+        }
+        Err(ReadlineError::Interrupted) => {
+            println!("");
+            Some("I just received a Ctrl-C. Let me check if i have to stop some programs...".to_string())
+        }
+        Err(err) => {
+            eprintln!("Error : {:#?}", err);
+            None
+        }
+    }
 }
