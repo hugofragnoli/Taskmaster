@@ -1,10 +1,15 @@
 [package]
 name = "Taskmaster"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 
 [dependencies]
 libc = "0.2.182"
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9"
 rustyline = "17.0.2"
+
+# fix ecole
+# rustyline = { version = "17.0.2", default-features = false, features = ["custom-bindings", "with-file-history"] }
+home = "=0.5.9"
+indexmap = "=2.11.4"
