@@ -1,4 +1,4 @@
-use std::{env::current_exe, time::Duration};
+use std::time::Duration;
 
 use std::thread::sleep;
 
@@ -25,9 +25,7 @@ pub fn exec_thread_entry(
 	// start programs at launch
 	for program in &mut current_config.programs {
 		if program.config.1.autostart {
-			for _ in 0..program.config.1.num_processes {
-				start_prog(program);
-			}
+			start_prog(program, true);
 		}
 	}
 	let _ = sender.send(ThreadMessage::ExecReady);
@@ -41,7 +39,7 @@ pub fn exec_thread_entry(
 						if !p.childs.is_empty() {
 							info!("Program : '{}' already running.", cmd);
 						} else {
-							start_prog(p);
+							start_prog(p, true);
 						}
 					} else {
 						error!("Program '{}' not found.", cmd);
@@ -84,23 +82,64 @@ pub fn exec_thread_entry(
 							info!("Program : '{}' already off.", cmd);
 						} else {
 							stop_prog(p);
-							start_prog(p);
+							start_prog(p, true);
 						}
 					} else {
 						error!("Program '{}' not found.", cmd);
 					}
 					let _ = sender.send(ThreadMessage::ActionDone);
 				}
-				ThreadMessage::ReloadConfig(taskmaster) => {
+				ThreadMessage::ReloadConfig(new_config) => {
 					// kill -s SIGHUP $(ps aux | grep Taskmaster | awk '{ print $2 }')
-					for program in taskmaster.programs {
-						if let Some(candidat) = current_config.programs.iter().find(|&p| p.config.0 == program.config.0)
-						{
-							println!("{} is in the 2 configs", candidat.config.0);
-							if candidat.config.1 != program.config.1 {
-								println!("Config changed for : {}", candidat.config.0);
+
+					let mut to_remove: Vec<usize> = vec![];
+
+					for (index, program) in current_config.programs.iter_mut().enumerate() {
+						// removed program
+						if !new_config.programs.contains(program) {
+							// program is not present in new config
+							to_remove.push(index);
+							info!("{} will be removed.", program.config.0);
+						} else {
+							let new_p = new_config.programs.iter().find(|p| p.config.0 == program.config.0).unwrap();
+
+							println!("{} is in the 2 configs", new_p.config.0);
+							if new_p.config.1 != program.config.1 {
+								println!("Config changed for : {}", program.config.0);
+
+								// kill process if running
+								if !program.childs.is_empty() {
+									stop_prog(program);
+								}
+								program.config.1 = new_p.config.1.clone();
+								info!("{} updated.", new_p.config.0);
+								// restart if necessary
+								if program.config.1.autostart {
+									start_prog(program, true);
+								}
 							}
 						}
+					}
+
+					// added program
+					for program in new_config.programs {
+						if !current_config.programs.contains(&program) {
+							info!("New program in config {}", program.config.0);
+							current_config.programs.push(program);
+							if let Some(p) = current_config.programs.last_mut()
+								&& p.config.1.autostart
+							{
+								start_prog(p, true);
+							}
+						}
+					}
+
+					// kill and remove
+					for idx in to_remove {
+						if !current_config.programs[idx].childs.is_empty() {
+							stop_prog(&mut current_config.programs[idx]);
+						}
+						current_config.programs.remove(idx);
 					}
 
 					let _ = sender.send(ThreadMessage::ConfigReloaded);

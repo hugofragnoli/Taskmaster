@@ -94,6 +94,12 @@ pub struct Program {
 	pub last_launch_time: std::time::Instant,
 }
 
+impl PartialEq for Program {
+	fn eq(&self, other: &Self) -> bool {
+		self.config.0 == other.config.0
+	}
+}
+
 #[derive(Debug)]
 pub struct Taskmaster {
 	pub programs: Vec<Program>,

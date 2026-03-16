@@ -91,8 +91,6 @@ fn check_exec_ready(
 }
 
 extern "C" fn reload_handler(_: c_int) {
-	println!("Need to reload config");
-
 	SIGHUP_RECEIVED.lock().unwrap().store(true, Ordering::Relaxed);
 }
 

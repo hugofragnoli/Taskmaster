@@ -44,8 +44,10 @@ pub fn print_status(taskmaster: &Taskmaster, target_prog: Option<&str>) {
 	for program in &taskmaster.programs {
 		let prog_name = &program.config.0;
 
-		if let Some(target) = target_prog && prog_name != target {
-				continue;
+		if let Some(target) = target_prog
+			&& prog_name != target
+		{
+			continue;
 		}
 
 		let is_running = !program.childs.is_empty();
@@ -58,7 +60,9 @@ pub fn print_status(taskmaster: &Taskmaster, target_prog: Option<&str>) {
 	}
 }
 
-pub fn start_prog(program: &mut Program) {
+// j'ai ajouter un bool pour pas que l'exec print quand il fait sa boucle de verification.
+// il doit print uniquement quand le main lui envoi une commande.
+pub fn start_prog(program: &mut Program, print_message: bool) {
 	// ON va mettre un fichier de log par commande ca posera pas de pb dacces DIS MOI CE QUE TEN PENSES BG
 	let prog_name = &program.config.0; // "nom du prog bg"
 	let args = &program.config.1; // "toute la conf"
@@ -117,24 +121,32 @@ pub fn start_prog(program: &mut Program) {
 			cmd.stderr(Stdio::null());
 		}
 
-		match cmd.spawn() {
-			Ok(child) => {
-				info!("Program [{}] launch with PID {}", prog_name, child.id());
-				program.childs.push(child);
+		for _ in 0..program.config.1.num_processes {
+			match cmd.spawn() {
+				Ok(child) => {
+					if print_message {
+						info!("Program [{}] launch with PID {}", prog_name, child.id());
+					}
+					program.childs.push(child);
+				}
+				Err(e) => {
+					if print_message {
+						error!("Error during program [{}] launch : {}", prog_name, e);
+					}
+				}
 			}
-			Err(e) => error!("Error during program [{}] launch : {}", prog_name, e),
 		}
 	}
 }
 
 pub fn stop_prog(program: &mut Program) {
 	for child in &mut program.childs {
-		debug!("trying to kill process");
-		let result = child.kill();
+		// debug!("trying to kill process");
+		let _result = child.kill();
 		// wait necessaire pour tuer le process jsp pourquoi ??
 		// kill seul envoi le signal mais si on wait pas ca marche pas
 		child.wait().expect("Unable to kill process");
-		println!("kill result: {:?}", result);
+		// println!("kill result: {:?}", result);
 	}
 	program.childs.clear();
 }
@@ -161,12 +173,12 @@ fn should_relaunch(program: &Program) -> bool {
 
 pub fn check_process_status(taskmaster: &mut Taskmaster) {
 	for program in &mut taskmaster.programs {
-		let prog_name = &program.config.0.clone();
+		let _prog_name = &program.config.0.clone();
 		let config = &program.config.1;
 		program.childs.retain_mut(|child| match child.try_wait() {
 			Ok(Some(status)) => {
-				let exit_code = status.code();
-				info!("[{}] has stopped with status: {}", prog_name, status);
+				let _ = status.code();
+				// info!("[{}] has stopped with status: {}", prog_name, status);
 
 				if program.last_launch_time.elapsed().as_secs() < config.minimum_runtime.unwrap_or(1) {
 					program.retry_count += 1;
@@ -179,22 +191,20 @@ pub fn check_process_status(taskmaster: &mut Taskmaster) {
 			Ok(None) => {
 				true // Le process tourne encore, on le garde
 			}
-			Err(e) => {
-				error!("Error while checking status of [{}]: {}", prog_name, e); // check qui fail.
+			Err(_) => {
+				// error!("Error while checking status of [{}]: {}", prog_name, e); // check qui fail.
 				false
 			}
 		});
 
-		if program.childs.len() < config.num_processes as usize {
-			if should_relaunch(program) {
-				info!(
-					"[{}] Relaunching (Attempt {}/{})",
-					prog_name,
-					program.retry_count + 1,
-					config.max_relauch_retry
-				);
-				start_prog(program);
-			}
+		if program.childs.len() < config.num_processes as usize && should_relaunch(program) {
+			// info!(
+			// 	"[{}] Relaunching (Attempt {}/{})",
+			// 	prog_name,
+			// 	program.retry_count + 1,
+			// 	config.max_relauch_retry
+			// );
+			start_prog(program, false);
 		}
 	}
 }
