@@ -1,0 +1,15 @@
+BasedOnStyle: Google
+ColumnLimit: 130
+Standard: c++03
+UseTab: Always
+IndentWidth: 4
+TabWidth: 4
+
+# --- Alignement ---
+AlignConsecutiveDeclarations: Consecutive
+AlignConsecutiveAssignments: AcrossEmptyLinesAndComments
+AlignOperands: AlignAfterOperator
+AlignTrailingComments: true
+
+# --- Spaces ---
+PointerAlignment: Left
