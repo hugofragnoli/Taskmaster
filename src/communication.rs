@@ -21,8 +21,7 @@ pub enum ThreadMessage {
 	ExitDone,   // reponse du thread exec pour dire qu'il a quitter
 	ActionDone, // reponse du thread a start / stop / restart.
 	ExecReady,
-	StopInt,
-	StopTerm,
+
 	StopAll(StopSig),
 
 }
