@@ -18,36 +18,18 @@ programs:
       chien: "chat"
     umask: 022
   env2:
-    cmd: "./testprogs/env/env"
+    cmd: "./testprogs/return_code/return_code"
     num_processes: 1
     autostart: false
-    restart_policy: "Never"
+    restart_policy: "UnexpectedExits"
     expected_error_codes:
       - 0
+      - 1
     minimum_runtime: 5
     max_relauch_retry: 4
     stop_signal: SIGTERM
     time_after_proper_stop: 10
-    env_to_set:
-      chien: "chat"
     redirect:
       stdout: "env2_stdout.txt"
       stderr: "env2_stderr.txt"
-    umask: 022
-  cwd:
-    cmd: "./testprogs/cwd/cwd"
-    num_processes: 1
-    autostart: false
-    restart_policy: "Never"
-    expected_error_codes:
-      - 0
-    minimum_runtime: 5
-    max_relauch_retry: 4
-    stop_signal: SIGTERM
-    time_after_proper_stop: 10
-    env_to_set:
-      chien: "chat"
-    redirect:
-      stdout: "cwd_stdout.txt"
-      stderr: "cwd_stderr.txt"
     umask: 022

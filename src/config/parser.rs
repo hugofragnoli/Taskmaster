@@ -55,6 +55,7 @@ pub fn parse_config() -> Result<Taskmaster, TaskmasterError> {
 			childs: Vec::new(),
 			retry_count: 0,
 			last_launch_time: Instant::now(),
+			unexpected_error_code: false,
 		});
 	}
 
