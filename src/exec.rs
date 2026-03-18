@@ -151,7 +151,7 @@ pub fn stop_prog(program: &mut Program) {
 	program.childs.clear();
 }
 
-fn should_relaunch(program: &Program) -> bool {
+fn should_relaunch(program: &mut Program) -> bool {
 	let config = &program.config.1;
 
 	if let _Restart::Never = config.restart_policy {
@@ -168,6 +168,11 @@ fn should_relaunch(program: &Program) -> bool {
 		return false; //attends encore 
 	}
 
+	// unexpected error code
+	if program.unexpected_error_code {
+		program.unexpected_error_code = false;
+	}
+
 	true
 }
 
@@ -177,9 +182,16 @@ pub fn check_process_status(taskmaster: &mut Taskmaster) {
 		let config = &program.config.1;
 		program.childs.retain_mut(|child| match child.try_wait() {
 			Ok(Some(status)) => {
-				let _ = status.code();
-				// info!("[{}] has stopped with status: {}", prog_name, status);
+				let status = status.code();
+				// info!("[{}] has stopped with status: {:?}", _prog_name, status);
 
+				if let Some(code) = status {
+					if let Some(errors_code) = &program.config.1.expected_error_codes {
+						if !errors_code.contains(&(code as u32)) {
+							program.unexpected_error_code = true;
+						}
+					}
+				}
 				if program.last_launch_time.elapsed().as_secs() < config.minimum_runtime.unwrap_or(1) {
 					program.retry_count += 1;
 				} else {
@@ -198,12 +210,8 @@ pub fn check_process_status(taskmaster: &mut Taskmaster) {
 		});
 
 		if program.childs.len() < config.num_processes as usize && should_relaunch(program) {
-			// info!(
-			// 	"[{}] Relaunching (Attempt {}/{})",
-			// 	prog_name,
-			// 	program.retry_count + 1,
-			// 	config.max_relauch_retry
-			// );
+			println!("{} {}", _prog_name, program.childs.len());
+			info!("[{}] Relaunching (Attempt {})", _prog_name, program.retry_count + 1,);
 			start_prog(program, false);
 		}
 	}

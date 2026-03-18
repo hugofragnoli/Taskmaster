@@ -92,6 +92,7 @@ pub struct Program {
 	pub childs: Vec<Child>,
 	pub retry_count: u32,
 	pub last_launch_time: std::time::Instant,
+	pub unexpected_error_code: bool,
 }
 
 impl PartialEq for Program {
