@@ -46,6 +46,21 @@ pub fn exec_thread_entry(
 					}
 					let _ = sender.send(ThreadMessage::ActionDone);
 				}
+				ThreadMessage::SignalReceived(received_sig) => {
+					info!("Exec : Réception du signal {:?}. Analyse de la configuration...", received_sig);
+					
+					for program in current_config.programs.iter_mut() {
+						if let Some(config_sig) = &program.config.1.stop_signal {
+							if *config_sig == received_sig {
+								info!("Signal {:?} corresponding to '{}''s config. Stoping it properly...", received_sig, program.config.0);
+								
+								if !program.childs.is_empty() {
+									stop_prog(program);
+								}
+							}
+						}
+					}
+				}
 				ThreadMessage::Stop(cmd) => {
 					if let Some(p) = current_config.programs.iter_mut().find(|p| p.config.0 == cmd) {
 						if !p.childs.is_empty() {

@@ -1,4 +1,4 @@
-use crate::config::structs::Taskmaster;
+use crate::config::structs::{Taskmaster, _Signalstopper};
 
 #[derive(Debug)]
 pub enum ThreadMessage {
@@ -18,4 +18,5 @@ pub enum ThreadMessage {
 	ExecReady,
 	ConfigReloaded,
 	ConfigReloadError(String),
+	SignalReceived(_Signalstopper),
 }

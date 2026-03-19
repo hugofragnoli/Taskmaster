@@ -15,7 +15,6 @@ const PROMPT: &str = "\x1b[34mtask\x1b[0mmas\x1b[31mter >\x1b[0m";
 // Option : retourne some("qqchose") si user tjrs la.
 // None si user plus la
 pub fn read_command(rl: &mut DefaultEditor) -> Option<String> {
-	// let prompt = "\x01\x1b[94m\x02task\x01\x1b[97m\x02mas\x01\x1b[91m\x02ter > \x01\x1b[0m\x02";
 	match rl.readline(PROMPT) {
 		Ok(line) => {
 			let trimmed = line.trim();
@@ -24,7 +23,6 @@ pub fn read_command(rl: &mut DefaultEditor) -> Option<String> {
 				let _ = rl.add_history_entry(trimmed); //stocke dans la RAM. 
 			}
 			// println!("{}", trimmed.to_string()); DEBUG BG
-			//retour  sous forme de stringgg d'anas
 			Some(trimmed.to_string())
 		}
 		Err(ReadlineError::Interrupted) | Err(ReadlineError::Eof) => {

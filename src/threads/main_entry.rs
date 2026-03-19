@@ -2,20 +2,21 @@ use std::{
 	ffi::c_void,
 	sync::{
 		Mutex,
-		atomic::{AtomicBool, Ordering},
+		atomic::{AtomicI32, AtomicBool, Ordering},
 		mpsc::{RecvTimeoutError, SendError},
 	},
 	thread::sleep,
 	time::Duration,
 };
 
-use libc::{SIGHUP, c_int, sighandler_t, signal};
+use libc::{SIGHUP, SIGTERM, c_int, sighandler_t, signal};
 
 use crate::{
 	communication::{self, ThreadMessage},
 	config::parser::parse_config,
 	error, info,
 	taskmasterctl::read_history::read_command,
+	config::structs::_Signalstopper,
 };
 
 extern crate libc;
@@ -29,6 +30,7 @@ extern crate libc;
 */
 
 static SIGHUP_RECEIVED: Mutex<AtomicBool> = Mutex::new(AtomicBool::new(false));
+static LAST_SIGNAL: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32::new(0);
 
 /*
 * Structs / enums
@@ -90,6 +92,10 @@ fn check_exec_ready(
 	}
 }
 
+extern "C" fn generic_signal_handler(sig: c_int) {
+	LAST_SIGNAL.store(sig, Ordering::Relaxed);
+}
+
 extern "C" fn reload_handler(_: c_int) {
 	SIGHUP_RECEIVED.lock().unwrap().store(true, Ordering::Relaxed);
 }
@@ -100,6 +106,27 @@ fn get_handler() -> sighandler_t {
 
 fn setup_reload_handler() {
 	unsafe { signal(SIGHUP, get_handler()) };
+}
+
+fn setup_signal_handlers() {
+    let signals_to_catch = [
+		libc::SIGINT, libc::SIGQUIT, libc::SIGILL, libc::SIGTRAP, 
+		libc::SIGABRT, libc::SIGBUS, libc::SIGFPE, libc::SIGUSR1, 
+		libc::SIGSEGV, libc::SIGUSR2, libc::SIGPIPE, libc::SIGALRM, 
+		libc::SIGTERM, libc::SIGCHLD, libc::SIGCONT, libc::SIGTSTP, 
+		libc::SIGTTIN, libc::SIGTTOU, libc::SIGURG, libc::SIGXCPU, 
+		libc::SIGXFSZ, libc::SIGVTALRM, libc::SIGPROF, libc::SIGWINCH, 
+		libc::SIGIO
+	];
+
+    unsafe { 
+
+        signal(SIGHUP, reload_handler as sighandler_t);
+
+        for &sig in &signals_to_catch {
+            signal(sig, generic_signal_handler as sighandler_t);
+        }
+    }
 }
 
 fn should_reload(
@@ -130,6 +157,23 @@ fn should_reload(
 		guard.store(false, Ordering::Relaxed); // reset bool
 	}
 }
+
+fn process_signals(
+    receiver: &std::sync::mpsc::Receiver<communication::ThreadMessage>,
+    sender: &std::sync::mpsc::Sender<communication::ThreadMessage>,
+) {
+    should_reload(receiver, sender);
+
+    let caught_sig = LAST_SIGNAL.swap(0, Ordering::Relaxed);
+    if caught_sig != 0 {
+        if let Some(sig_enum) = _Signalstopper::from_i32(caught_sig) {
+            info!("Signal {} received ({:?}). Giving it to exec thread...", caught_sig, sig_enum);
+
+            let _ = sender.send(ThreadMessage::SignalReceived(sig_enum));
+        }
+    }
+}
+
 /*
 * Public Functions
 */
@@ -141,22 +185,20 @@ pub fn main_thread_entry(
 	sender: std::sync::mpsc::Sender<communication::ThreadMessage>,
 	mut rl: rustyline::Editor<(), rustyline::history::FileHistory>,
 ) -> Result<(), SendError<ThreadMessage>> {
-	setup_reload_handler();
+	setup_signal_handlers();
 
 	if !check_exec_ready(&receiver, &sender) {
 		return Ok(());
 	}
 	info!("Execution thread ready.");
 
-	//copie de lancien handle_commands_sh
 	loop {
-		should_reload(&receiver, &sender);
+		process_signals(&receiver, &sender);
 
 		let mut should_quit = ThreadShoudQuit::No;
 
 		if let Some(cmd) = read_command(&mut rl) {
 			let splitted: Vec<&str> = cmd.split_whitespace().collect();
-			//ajout du sighandler TODO
 			match &splitted[..] {
 				["start", follow_starts @ ..] => {
 					for prog_name in follow_starts {

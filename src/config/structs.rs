@@ -49,6 +49,44 @@ pub enum _Signalstopper {
 	SIGUNUSED,
 }
 
+impl _Signalstopper {
+	pub fn from_i32(n: i32) -> Option<Self> {
+		match n {
+			libc::SIGHUP => Some(_Signalstopper::SIGHUP),
+			libc::SIGINT => Some(_Signalstopper::SIGINT),
+			libc::SIGQUIT => Some(_Signalstopper::SIGQUIT),
+			libc::SIGILL => Some(_Signalstopper::SIGILL),
+			libc::SIGTRAP => Some(_Signalstopper::SIGTRAP),
+			libc::SIGABRT => Some(_Signalstopper::SIGABRT),
+			libc::SIGIOT => Some(_Signalstopper::SIGIOT),
+			libc::SIGBUS => Some(_Signalstopper::SIGBUS),
+			libc::SIGFPE => Some(_Signalstopper::SIGFPE),
+			libc::SIGKILL => Some(_Signalstopper::SIGKILL),
+			libc::SIGUSR1 => Some(_Signalstopper::SIGUSR1),
+			libc::SIGSEGV => Some(_Signalstopper::SIGSEGV),
+			libc::SIGUSR2 => Some(_Signalstopper::SIGUSR2),
+			libc::SIGPIPE => Some(_Signalstopper::SIGPIPE),
+			libc::SIGALRM => Some(_Signalstopper::SIGALRM),
+			libc::SIGTERM => Some(_Signalstopper::SIGTERM),
+			libc::SIGCHLD => Some(_Signalstopper::SIGCHLD),
+			libc::SIGCONT => Some(_Signalstopper::SIGCONT),
+			libc::SIGSTOP => Some(_Signalstopper::SIGSTOP),
+			libc::SIGTSTP => Some(_Signalstopper::SIGTSTP),
+			libc::SIGTTIN => Some(_Signalstopper::SIGTTIN),
+			libc::SIGTTOU => Some(_Signalstopper::SIGTTOU),
+			libc::SIGURG => Some(_Signalstopper::SIGURG),
+			libc::SIGXCPU => Some(_Signalstopper::SIGXCPU),
+			libc::SIGXFSZ => Some(_Signalstopper::SIGXFSZ),
+			libc::SIGVTALRM => Some(_Signalstopper::SIGVTALRM),
+			libc::SIGPROF => Some(_Signalstopper::SIGPROF),
+			libc::SIGWINCH => Some(_Signalstopper::SIGWINCH),
+			libc::SIGIO => Some(_Signalstopper::SIGIO),
+			libc::SIGSYS => Some(_Signalstopper::SIGSYS),
+			_ => None,
+		}
+	}
+}
+
 impl From<u32> for _Signalstopper {
 	fn from(value: u32) -> Self {
 		todo!()
