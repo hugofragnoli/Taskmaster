@@ -164,6 +164,7 @@ fn should_relaunch(program: &mut Program) -> bool {
         _Restart::Never => return false,
         _Restart::UnexpectedExits => {
             if !program.unexpected_error_code {
+				// println!({program.unexpected_error_code});
                 return false;
             }
         }

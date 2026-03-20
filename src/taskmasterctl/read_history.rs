@@ -26,9 +26,6 @@ pub fn read_command(rl: &mut DefaultEditor) -> Option<String> {
         }
         Err(ReadlineError::Interrupted) | Err(ReadlineError::Eof) => {
             eprintln!("Ctrl+c or EOF detected. Exiting...");
-            
-            // LA MODIFICATION EST ICI :
-            // Au lieu de renvoyer None, on simule la commande "exit"
             Some("exit".to_string()) 
         }
         Err(err) => {
