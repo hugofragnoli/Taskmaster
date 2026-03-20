@@ -25,7 +25,7 @@ pub fn exec_thread_entry(
 	// start programs at launch
 	for program in &mut current_config.programs {
 		if program.config.1.autostart {
-			start_prog(program, true);
+			start_prog(program, true, program.config.1.num_processes as usize);
 		}
 	}
 	let _ = sender.send(ThreadMessage::ExecReady);
@@ -39,7 +39,7 @@ pub fn exec_thread_entry(
 						if !p.childs.is_empty() {
 							info!("Program : '{}' already running.", cmd);
 						} else {
-							start_prog(p, true);
+							start_prog(p, true, p.config.1.num_processes as usize);
 						}
 					} else {
 						error!("Program '{}' not found.", cmd);
@@ -97,7 +97,7 @@ pub fn exec_thread_entry(
 							info!("Program : '{}' already off.", cmd);
 						} else {
 							stop_prog(p);
-							start_prog(p, true);
+							start_prog(p, true, p.config.1.num_processes as usize);
 						}
 					} else {
 						error!("Program '{}' not found.", cmd);
@@ -130,7 +130,7 @@ pub fn exec_thread_entry(
 								info!("{} updated.", new_p.config.0);
 								// restart if necessary
 								if program.config.1.autostart {
-									start_prog(program, true);
+									start_prog(program, true, program.config.1.num_processes as usize);
 								}
 							}
 						}
@@ -144,7 +144,7 @@ pub fn exec_thread_entry(
 							if let Some(p) = current_config.programs.last_mut()
 								&& p.config.1.autostart
 							{
-								start_prog(p, true);
+								start_prog(p, true, p.config.1.num_processes as usize);
 							}
 						}
 					}

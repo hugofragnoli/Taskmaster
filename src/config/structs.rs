@@ -87,11 +87,11 @@ impl _Signalstopper {
 	}
 }
 
-impl From<u32> for _Signalstopper {
-	fn from(value: u32) -> Self {
-		todo!()
-	}
-}
+// impl From<u32> for _Signalstopper {
+// 	fn from(value: u32) -> Self {
+// 		todo!()
+// 	}
+// }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Redirect {
@@ -106,7 +106,7 @@ pub struct ProgramConfig2 {
 	pub num_processes: u32,                          // process to start and keep running
 	pub autostart: bool,                             // launch program at start of taskmaster
 	pub restart_policy: _Restart,                    // always|never|unexpected exit
-	pub expected_error_codes: Option<Vec<u32>>,      // normal exit codes
+	pub expected_error_codes: Option<Vec<u32>>,      // normal exit codes				 // dire a stop si on doit relaunch ou pas.
 	pub minimum_runtime: Option<u64>,                // minimum time to consider the program "successfully started"
 	pub max_relauch_retry: u32,                      // how many restart before abortting
 	pub stop_signal: Option<_Signalstopper>,         // signal used to stop the program
@@ -131,6 +131,7 @@ pub struct Program {
 	pub retry_count: u32,
 	pub last_launch_time: std::time::Instant,
 	pub unexpected_error_code: bool,
+	pub is_stopped_manually: bool,
 }
 
 impl PartialEq for Program {

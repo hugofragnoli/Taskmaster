@@ -62,7 +62,8 @@ pub fn print_status(taskmaster: &Taskmaster, target_prog: Option<&str>) {
 
 // j'ai ajouter un bool pour pas que l'exec print quand il fait sa boucle de verification.
 // il doit print uniquement quand le main lui envoi une commande.
-pub fn start_prog(program: &mut Program, print_message: bool) {
+pub fn start_prog(program: &mut Program, print_message: bool, num_to_start: usize) {
+	program.is_stopped_manually = false;
 	// ON va mettre un fichier de log par commande ca posera pas de pb dacces DIS MOI CE QUE TEN PENSES BG
 	let prog_name = &program.config.0; // "nom du prog bg"
 	let args = &program.config.1; // "toute la conf"
@@ -121,7 +122,7 @@ pub fn start_prog(program: &mut Program, print_message: bool) {
 			cmd.stderr(Stdio::null());
 		}
 
-		for _ in 0..program.config.1.num_processes {
+		for _ in 0..num_to_start {
 			match cmd.spawn() {
 				Ok(child) => {
 					if print_message {
@@ -140,6 +141,7 @@ pub fn start_prog(program: &mut Program, print_message: bool) {
 }
 
 pub fn stop_prog(program: &mut Program) {
+	program.is_stopped_manually = true;
 	for child in &mut program.childs {
 		// debug!("trying to kill process");
 		let _result = child.kill();
@@ -154,9 +156,19 @@ pub fn stop_prog(program: &mut Program) {
 fn should_relaunch(program: &mut Program) -> bool {
 	let config = &program.config.1;
 
-	if let _Restart::Never = config.restart_policy {
-		return false;
-	}
+	if program.is_stopped_manually {
+        return false;
+    }
+
+	match config.restart_policy {
+        _Restart::Never => return false,
+        _Restart::UnexpectedExits => {
+            if !program.unexpected_error_code {
+                return false;
+            }
+        }
+        _Restart::Always => (),
+    }
 
 	if program.retry_count >= config.max_relauch_retry {
 		//  print une seule fois que c'est errorfatal ???
@@ -182,18 +194,34 @@ pub fn check_process_status(taskmaster: &mut Taskmaster) {
 		let config = &program.config.1;
 		program.childs.retain_mut(|child| match child.try_wait() {
 			Ok(Some(status)) => {
-				let status = status.code();
+
+				if program.is_stopped_manually {
+                        return false; 
+                    }
+
+				let exit_code = status.code();
+
 				// info!("[{}] has stopped with status: {:?}", _prog_name, status);
 
-				if let Some(code) = status {
-					if let Some(errors_code) = &program.config.1.expected_error_codes {
-						if !errors_code.contains(&(code as u32)) {
-							program.unexpected_error_code = true;
-						}
+				if let Some(code) = exit_code {
+                    if let Some(errors_code) = &program.config.1.expected_error_codes {
+                        if !errors_code.contains(&(code as u32)) {
+                            program.unexpected_error_code = true;
+                        }
+                    }
+					else if code != 0 {
+						program.unexpected_error_code = true;
 					}
 				}
-				if program.last_launch_time.elapsed().as_secs() < config.minimum_runtime.unwrap_or(1) {
-					program.retry_count += 1;
+				else {
+                    program.unexpected_error_code = true; 
+                }
+
+				let min_run = program.config.1.minimum_runtime.unwrap_or(1);
+				if program.last_launch_time.elapsed().as_secs() < min_run {
+                        program.retry_count += 1;
+                        error!("[{}] Crashed too quickly (retry {}/{})", 
+                            _prog_name, program.retry_count, program.config.1.max_relauch_retry);
 				} else {
 					program.retry_count = 0; // Il a vécu assez longtemps, on reset
 				}
@@ -209,10 +237,16 @@ pub fn check_process_status(taskmaster: &mut Taskmaster) {
 			}
 		});
 
-		if program.childs.len() < config.num_processes as usize && should_relaunch(program) {
-			println!("{} {}", _prog_name, program.childs.len());
-			info!("[{}] Relaunching (Attempt {})", _prog_name, program.retry_count + 1,);
-			start_prog(program, false);
+		let current_len = program.childs.len();
+        let target_len = config.num_processes as usize;
+
+        if current_len < target_len && should_relaunch(program) {
+            let missing = target_len - current_len; // On calcule ceux qui manquent
+            println!("{} {}", _prog_name, current_len);
+            info!("[{}] Relaunching {} process (Attempt {})", _prog_name, missing, program.retry_count + 1);
+            
+            // On ne relance QUE le nombre manquant
+            start_prog(program, false, missing);
 		}
 	}
 }

@@ -9,7 +9,25 @@ programs:
       - 2
     minimum_runtime: 5
     max_relauch_retry: 4
-    stop_signal: SIGTERM
+    stop_signal: SIGINT
+    time_after_proper_stop: 10
+    redirect:
+      stdout: "ping1_stdout.txt"
+      stderr: "ping1_stderr.txt"
+    env_to_set:
+      chien: "chat"
+    umask: 022
+  ping2:
+    cmd: "ping 42.com"
+    num_processes: 2
+    autostart: true
+    restart_policy: "UnexpectedExits"
+    expected_error_codes:
+      - 0
+      - 2
+    minimum_runtime: 5
+    max_relauch_retry: 4
+    stop_signal: SIGINT
     time_after_proper_stop: 10
     redirect:
       stdout: "ping1_stdout.txt"
@@ -27,7 +45,7 @@ programs:
       - 1
     minimum_runtime: 5
     max_relauch_retry: 4
-    stop_signal: SIGTERM
+    stop_signal: SIGINT
     time_after_proper_stop: 10
     redirect:
       stdout: "env2_stdout.txt"
