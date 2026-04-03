@@ -42,15 +42,17 @@ pub fn start_prog(program: &mut Program, print_message: bool, num_to_start: usiz
 	if let Some(binary) = split_args.first() {
 		let bin_path = Path::new(binary);
 
-		let absolute_bin = if bin_path.is_absolute() {
+		let executable = if !binary.contains('/') {
+			bin_path.to_path_buf()
+		} else if bin_path.is_absolute() {
 			bin_path.to_path_buf()
 		} else {
 			env::current_dir()
-				.unwrap_or_else(|_| Path::new("").to_path_buf())
+				.expect("Error : Unable to read current directory.")
 				.join(bin_path)
 		};
 
-		let mut cmd = Command::new(absolute_bin);
+		let mut cmd = Command::new(executable);
 
 		cmd.args(&split_args[1..]);
 

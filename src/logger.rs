@@ -31,7 +31,7 @@ impl Logger {
 
 		let now = SystemTime::now()
 			.duration_since(UNIX_EPOCH)
-			.expect("Erreur de temps")
+			.expect("Time error.")
 			.as_secs();
 
 		let secs_in_day = now % 86400;

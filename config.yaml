@@ -1,6 +1,6 @@
 programs:
   ping1:
-    cmd: "ping 42.com"
+    cmd: "ping google.com"
     num_processes: 2
     autostart: true
     restart_policy: "UnexpectedExits"
@@ -52,3 +52,4 @@ programs:
       chien: "chat"
     working_dir: "/tmp"
     umask: 022
+
