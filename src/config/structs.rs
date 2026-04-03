@@ -83,6 +83,12 @@ impl _Signalstopper {
 	}
 }
 
+// impl From<u32> for _Signalstopper {
+// 	fn from(value: u32) -> Self {
+// 		todo!()
+// 	}
+// }
+
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Redirect {
 	// filepaths

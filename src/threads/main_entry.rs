@@ -2,14 +2,14 @@
 use std::{
 	sync::{
 		Mutex,
-		atomic::{AtomicBool, Ordering},
+		atomic::{AtomicI32, AtomicBool, Ordering},
 		mpsc::{RecvTimeoutError, SendError},
 	},
 	thread::sleep,
 	time::Duration,
 };
 
-use libc::{SIGHUP, c_int, sighandler_t, signal};
+use libc::{SIGHUP, SIGTERM, c_int, sighandler_t, signal};
 
 use crate::{
 	communication::{self, ThreadMessage},
@@ -17,6 +17,7 @@ use crate::{
 	config::structs::_Signalstopper,
 	error, info,
 	taskmasterctl::read_history::read_command,
+	config::structs::_Signalstopper,
 };
 
 extern crate libc;
@@ -142,6 +143,27 @@ fn setup_signal_handlers() {
 			signal(sig, generic_signal_handler as sighandler_t);
 		}
 	}
+}
+
+fn setup_signal_handlers() {
+    let signals_to_catch = [
+		libc::SIGINT, libc::SIGQUIT, libc::SIGILL, libc::SIGTRAP, 
+		libc::SIGABRT, libc::SIGBUS, libc::SIGFPE, libc::SIGUSR1, 
+		libc::SIGSEGV, libc::SIGUSR2, libc::SIGPIPE, libc::SIGALRM, 
+		libc::SIGTERM, libc::SIGCHLD, libc::SIGCONT, libc::SIGTSTP, 
+		libc::SIGTTIN, libc::SIGTTOU, libc::SIGURG, libc::SIGXCPU, 
+		libc::SIGXFSZ, libc::SIGVTALRM, libc::SIGPROF, libc::SIGWINCH, 
+		libc::SIGIO
+	];
+
+    unsafe { 
+
+        signal(SIGHUP, reload_handler as sighandler_t);
+
+        for &sig in &signals_to_catch {
+            signal(sig, generic_signal_handler as sighandler_t);
+        }
+    }
 }
 
 fn should_reload(
