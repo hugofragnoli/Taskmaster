@@ -1,5 +1,5 @@
+#![allow(function_casts_as_integer)]
 use std::{
-	ffi::c_void,
 	sync::{
 		Mutex,
 		atomic::{AtomicBool, Ordering},
@@ -14,21 +14,19 @@ use libc::{SIGHUP, c_int, sighandler_t, signal};
 use crate::{
 	communication::{self, ThreadMessage},
 	config::parser::parse_config,
+	config::structs::_Signalstopper,
 	error, info,
 	taskmasterctl::read_history::read_command,
 };
 
 extern crate libc;
 
-// use libc::{ signal};
-// use libc::{SIGINT, c_int, c_void};
-// use libc::{exit, sighandler_t};
-
 /*
 * Global Var
 */
 
 static SIGHUP_RECEIVED: Mutex<AtomicBool> = Mutex::new(AtomicBool::new(false));
+static LAST_SIGNAL: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32::new(0);
 
 /*
 * Structs / enums
@@ -56,12 +54,18 @@ fn handle_response(
 		Ok(ThreadMessage::ExitDone) => info!("Exec thread successfully quit."),
 		Ok(ThreadMessage::StatusDone) => (),
 		Err(RecvTimeoutError::Timeout) => {
-			error!("Unable to receive a response for {:?}. Reason: Timeout", original_message)
+			error!(
+				"Unable to receive a response for {:?}. Reason: Timeout",
+				original_message
+			)
 		}
 		Err(RecvTimeoutError::Disconnected) => match original_message {
 			ThreadMessage::Exit => (),
 			_ => {
-				error!("Unable to receive a response for {:?}: Reason: Disconnected", original_message);
+				error!(
+					"Unable to receive a response for {:?}: Reason: Disconnected",
+					original_message
+				);
 				return ThreadShoudQuit::Yes;
 			}
 		},
@@ -90,16 +94,54 @@ fn check_exec_ready(
 	}
 }
 
+extern "C" fn generic_signal_handler(sig: c_int) {
+	LAST_SIGNAL.store(sig, Ordering::Relaxed);
+}
+
 extern "C" fn reload_handler(_: c_int) {
-	SIGHUP_RECEIVED.lock().unwrap().store(true, Ordering::Relaxed);
+	SIGHUP_RECEIVED
+		.lock()
+		.unwrap()
+		.store(true, Ordering::Relaxed);
 }
 
-fn get_handler() -> sighandler_t {
-	reload_handler as extern "C" fn(c_int) as *mut c_void as sighandler_t
-}
+fn setup_signal_handlers() {
+	let signals_to_catch = [
+		libc::SIGINT,
+		libc::SIGQUIT,
+		libc::SIGILL,
+		libc::SIGTRAP,
+		libc::SIGABRT,
+		libc::SIGBUS,
+		libc::SIGFPE,
+		libc::SIGUSR1,
+		libc::SIGSEGV,
+		libc::SIGUSR2,
+		libc::SIGPIPE,
+		libc::SIGALRM,
+		libc::SIGTERM,
+		libc::SIGCHLD,
+		libc::SIGCONT,
+		libc::SIGTSTP,
+		libc::SIGTTIN,
+		libc::SIGTTOU,
+		libc::SIGURG,
+		libc::SIGXCPU,
+		libc::SIGXFSZ,
+		libc::SIGVTALRM,
+		libc::SIGPROF,
+		libc::SIGWINCH,
+		libc::SIGIO,
+		libc::SIGSYS,
+	];
 
-fn setup_reload_handler() {
-	unsafe { signal(SIGHUP, get_handler()) };
+	unsafe {
+		signal(SIGHUP, reload_handler as sighandler_t);
+
+		for &sig in &signals_to_catch {
+			signal(sig, generic_signal_handler as sighandler_t);
+		}
+	}
 }
 
 fn should_reload(
@@ -118,7 +160,6 @@ fn should_reload(
 				let received = receiver.recv_timeout(Duration::from_secs(5));
 				match received {
 					Ok(ThreadMessage::ConfigReloaded) => info!("Config updated."),
-					Ok(ThreadMessage::ConfigReloadError(s)) => error!("Unable to reload config: {}", s),
 					_ => (),
 				}
 			}
@@ -127,9 +168,25 @@ fn should_reload(
 			}
 		}
 
-		guard.store(false, Ordering::Relaxed); // reset bool
+		guard.store(false, Ordering::Relaxed);
 	}
 }
+
+fn process_signals(
+	receiver: &std::sync::mpsc::Receiver<communication::ThreadMessage>,
+	sender: &std::sync::mpsc::Sender<communication::ThreadMessage>,
+) {
+	should_reload(receiver, sender);
+
+	let caught_sig = LAST_SIGNAL.swap(0, Ordering::Relaxed);
+	if caught_sig != 0 {
+		if let Some(sig_enum) = _Signalstopper::from_i32(caught_sig) {
+			let _ = sender.send(ThreadMessage::SignalReceived(sig_enum));
+			let _ = receiver.recv_timeout(Duration::from_secs(5));
+		}
+	}
+}
+
 /*
 * Public Functions
 */
@@ -141,23 +198,28 @@ pub fn main_thread_entry(
 	sender: std::sync::mpsc::Sender<communication::ThreadMessage>,
 	mut rl: rustyline::Editor<(), rustyline::history::FileHistory>,
 ) -> Result<(), SendError<ThreadMessage>> {
-	setup_reload_handler();
+	setup_signal_handlers();
 
 	if !check_exec_ready(&receiver, &sender) {
 		return Ok(());
 	}
 	info!("Execution thread ready.");
 
-	//copie de lancien handle_commands_sh
 	loop {
-		should_reload(&receiver, &sender);
+		process_signals(&receiver, &sender);
 
 		let mut should_quit = ThreadShoudQuit::No;
 
 		if let Some(cmd) = read_command(&mut rl) {
 			let splitted: Vec<&str> = cmd.split_whitespace().collect();
-			//ajout du sighandler TODO
 			match &splitted[..] {
+				["reload"] => {
+					SIGHUP_RECEIVED
+						.lock()
+						.unwrap()
+						.store(true, Ordering::Relaxed);
+					should_reload(&receiver, &sender);
+				}
 				["start", follow_starts @ ..] => {
 					for prog_name in follow_starts {
 						sender.send(ThreadMessage::Start(prog_name.to_string()))?;
@@ -165,7 +227,8 @@ pub fn main_thread_entry(
 						info!("Command start sent.");
 
 						let received = receiver.recv_timeout(Duration::from_secs(5));
-						should_quit = handle_response(ThreadMessage::Start(prog_name.to_string()), received);
+						should_quit =
+							handle_response(ThreadMessage::Start(prog_name.to_string()), received);
 					}
 				}
 
@@ -176,7 +239,8 @@ pub fn main_thread_entry(
 						info!("Command stop sent.");
 
 						let received = receiver.recv_timeout(Duration::from_secs(5));
-						should_quit = handle_response(ThreadMessage::Stop(prog_name.to_string()), received);
+						should_quit =
+							handle_response(ThreadMessage::Stop(prog_name.to_string()), received);
 					}
 				}
 
@@ -184,7 +248,7 @@ pub fn main_thread_entry(
 					sender.send(ThreadMessage::Exit)?;
 					info!("Command exit sent.");
 
-					sleep(Duration::from_secs(1)); // Sleep en attendant quon ferme tout ? oui sidi
+					sleep(Duration::from_secs(1));
 
 					let received = receiver.recv_timeout(Duration::from_secs(5));
 					handle_response(ThreadMessage::Exit, received);
@@ -197,7 +261,10 @@ pub fn main_thread_entry(
 						info!("Command restart sent.");
 
 						let received = receiver.recv_timeout(Duration::from_secs(5));
-						should_quit = handle_response(ThreadMessage::Restart(prog_name.to_string()), received);
+						should_quit = handle_response(
+							ThreadMessage::Restart(prog_name.to_string()),
+							received,
+						);
 					}
 				}
 				["status"] => {
@@ -212,7 +279,8 @@ pub fn main_thread_entry(
 					for prog_name in follow_status {
 						sender.send(ThreadMessage::Status(prog_name.to_string()))?;
 						let received = receiver.recv_timeout(Duration::from_secs(5));
-						should_quit = handle_response(ThreadMessage::Status(prog_name.to_string()), received);
+						should_quit =
+							handle_response(ThreadMessage::Status(prog_name.to_string()), received);
 					}
 				}
 

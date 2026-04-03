@@ -37,7 +37,11 @@ pub fn parse_config() -> Result<Taskmaster, TaskmasterError> {
 	let path: String = match args.len() {
 		1 => String::from("config.yaml"),
 		2 => args[1].clone(),
-		_ => return Err(TaskmasterError::Argument("Too many arguments provided".to_string())),
+		_ => {
+			return Err(TaskmasterError::Argument(
+				"Too many arguments provided".to_string(),
+			));
+		}
 	};
 
 	let f = std::fs::File::open(&path)?;
@@ -45,7 +49,6 @@ pub fn parse_config() -> Result<Taskmaster, TaskmasterError> {
 
 	let mut tm: Taskmaster = Taskmaster {
 		programs: Vec::with_capacity(config.programs.len()),
-		config_file: path.clone(),
 	};
 
 	// initialize programs vector
@@ -56,58 +59,10 @@ pub fn parse_config() -> Result<Taskmaster, TaskmasterError> {
 			retry_count: 0,
 			last_launch_time: Instant::now(),
 			unexpected_error_code: false,
+			is_stopped_manually: false,
 		});
 	}
 
 	is_config_valid(&tm)?;
 	Ok(tm)
 }
-
-// pub fn parse_config() -> Result<Taskmaster, String> {
-// 	let args: Vec<String> = env::args().collect();
-//
-// 	let path: String;
-//
-// 	if args.len() > 2 {
-// 		error!("Too many arguments");
-// 		exit(1);
-// 	} else if args.len() == 2 {
-// 		path = args[1].clone();
-// 	} else {
-// 		path = String::from("config.yaml");
-// 	}
-//
-// 	let f = std::fs::File::open(&path);
-// 	match f {
-// 		Ok(file) => {
-// 			let config = parse_config2(file);
-// 			match config {
-// 				Ok(conf) => {
-// 					let mut tm: Taskmaster = Taskmaster { programs: vec![], config_file: path.clone() };
-//
-// 					for p in conf.programs.iter().enumerate().clone() {
-// 						tm.programs.push(Program {
-// 							config: (p.1.0.clone(), p.1.1.clone()),
-// 							childs: Vec::new(),
-// 							retry_count: 0,
-// 							last_launch_time: Instant::now(),
-// 						});
-// 					}
-//
-//                     if is_config_valid(&tm) {
-//                         return Ok(tm);
-//                     }
-//                     Err(String::from("Invalid config"))
-// 				}
-// 				Err(e) => {
-// 					error!(format!("Unable to  parse config : {}", e));
-//                     Err(String::from(format!("Unable to  parse config : {}", e)))
-// 				}
-// 			}
-// 		}
-// 		Err(e) => {
-// 			error!(format!("Unable to open file {} : {}", path, e));
-//                     Err(String::from(format!("Unable to open file {} : {}", path, e)))
-// 		}
-// 	}
-// }

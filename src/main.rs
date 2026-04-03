@@ -19,8 +19,6 @@ fn main() {
 
 	match config {
 		Ok(taskmaster) => {
-			// println!("{:#?}", taskmaster);
-
 			let path = "history.txt";
 
 			let rl = match setup_shell(path) {
@@ -33,11 +31,10 @@ fn main() {
 
 			// exec_to_main
 			let (exec_to_main_sender, exec_to_main_receiver) = channel::<ThreadMessage>();
-			//on utilise move pour transferer le ownership au thread exec. Le thread exec recupere tout droit sur la struct taskmaster
-			//thread main na plus le droit de lutiliser, de le lire ou de le modif.
 
-			let thread_exec =
-				thread::spawn(move || exec_thread_entry(main_to_exec_receiver, exec_to_main_sender, taskmaster));
+			let thread_exec = thread::spawn(move || {
+				exec_thread_entry(main_to_exec_receiver, exec_to_main_sender, taskmaster)
+			});
 
 			let _ = main_thread_entry(exec_to_main_receiver, main_to_exec_sender, rl);
 

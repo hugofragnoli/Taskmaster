@@ -2,7 +2,6 @@
 pub enum Level {
 	Debug = 0,
 	Info,
-	Warning,
 	Error,
 	Critical,
 }
@@ -20,7 +19,9 @@ pub struct Logger {
 
 impl Logger {
 	pub fn new() -> Logger {
-		Self { level: Level::Debug }
+		Self {
+			level: Level::Debug,
+		}
 	}
 
 	pub fn log(&self, msg_level: Level, msg: &str) {
@@ -28,7 +29,10 @@ impl Logger {
 			return;
 		}
 
-		let now = SystemTime::now().duration_since(UNIX_EPOCH).expect("Erreur de temps").as_secs();
+		let now = SystemTime::now()
+			.duration_since(UNIX_EPOCH)
+			.expect("Erreur de temps")
+			.as_secs();
 
 		let secs_in_day = now % 86400;
 		let hours = (secs_in_day / 3600 + 1) % 24;
@@ -38,7 +42,6 @@ impl Logger {
 		let color = match msg_level {
 			Level::Debug => "\x1b[34m",
 			Level::Info => "\x1b[32m",
-			Level::Warning => "\x1b[33m",
 			Level::Error => "\x1b[31m",
 			Level::Critical => "\x1b[1;31m",
 		};
@@ -57,9 +60,6 @@ impl Logger {
 	pub fn info(&self, msg: &str) {
 		self.log(Level::Info, msg);
 	}
-	pub fn warning(&self, msg: &str) {
-		self.log(Level::Warning, msg);
-	}
 	pub fn error(&self, msg: &str) {
 		self.log(Level::Error, msg);
 	}
@@ -68,33 +68,21 @@ impl Logger {
 	}
 }
 
-// OnceLock == singleton like
 pub static INSTANCE: OnceLock<Mutex<Logger>> = OnceLock::new();
 
-// return a reference to a variable with a static lifetime -> the logger live during all the
-// program lifetime.
-// get_or_init return a reference to INSTANCE if it exist or construct it with the closure function
 pub fn get_logger() -> &'static Mutex<Logger> {
 	INSTANCE.get_or_init(|| Mutex::new(Logger::new()))
 }
 
 #[macro_export]
 macro_rules! debug {
-    // with formatting
-    // fmt:expr => first argument. Here an expression like "Value {}"
-    // , a comma after the first argument
-    // $( ... )* => repetition loop, repeat instructions inside () for each next argument
-    // $arg:tt => tt for Token Tree, accept number, string ect... it's used to capture all
-    // arguments
     ($fmt:expr, $($arg:tt)*) => {
         {
-            // lock the mutex, the lock is released after exiting the `if` scope
             if let Ok(logger) = $crate::logger::get_logger().lock() {
                 logger.debug(&format!($fmt, $($arg)*));
             }
         }
     };
-    // without
     ($message:expr) => {
         {
             if let Ok(logger) = $crate::logger::get_logger().lock() {
@@ -117,24 +105,6 @@ macro_rules! info {
         {
             if let Ok(logger) = $crate::logger::get_logger().lock() {
                 logger.info($message.as_ref());
-            }
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! warning {
-    ($fmt:expr, $($arg:tt)*) => {
-        {
-            if let Ok(logger) = $crate::logger::get_logger().lock() {
-                logger.warning(&format!($fmt, $($arg)*));
-            }
-        }
-    };
-    ($message:expr) => {
-        {
-            if let Ok(logger) = $crate::logger::get_logger().lock() {
-                logger.warning($message.as_ref());
             }
         }
     };
