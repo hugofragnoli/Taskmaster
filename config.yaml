@@ -10,27 +10,9 @@ programs:
     minimum_runtime: 5
     max_relauch_retry: 4
     stop_signal: SIGABRT
-    time_after_proper_stop: 10
     redirect:
       stdout: "ping1_stdout.txt"
       stderr: "ping1_stderr.txt"
-    env_to_set:
-      chien: "chat"
-    umask: 022
-  ping2:
-    cmd: "ping 42.com"
-    num_processes: 2
-    autostart: true
-    restart_policy: "UnexpectedExits"
-    expected_error_codes:
-      - 0
-      - 3
-    minimum_runtime: 5
-    max_relauch_retry: 4
-    time_after_proper_stop: 10
-    redirect:
-      stdout: "ping2_stdout.txt"
-      stderr: "ping2_stderr.txt"
     env_to_set:
       chien: "chat"
     umask: 022
@@ -44,7 +26,6 @@ programs:
       - 3
     minimum_runtime: 5
     max_relauch_retry: 4
-    time_after_proper_stop: 10
     redirect:
       stdout: "cwd_stdout.txt"
       stderr: "cwd_stderr.txt"
@@ -52,4 +33,3 @@ programs:
       chien: "chat"
     working_dir: "/tmp"
     umask: 022
-
