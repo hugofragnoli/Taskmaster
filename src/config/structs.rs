@@ -13,16 +13,14 @@ pub enum _Restart {
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
 pub enum _Signalstopper {
-	SIGHUP, // reload config
+	SIGHUP,
 	SIGINT,
 	SIGQUIT,
 	SIGILL,
 	SIGTRAP,
 	SIGABRT,
-	SIGIOT,
 	SIGBUS,
 	SIGFPE,
-	SIGKILL,
 	SIGUSR1,
 	SIGSEGV,
 	SIGUSR2,
@@ -32,7 +30,6 @@ pub enum _Signalstopper {
 	SIGSTKFLT,
 	SIGCHLD,
 	SIGCONT,
-	SIGSTOP,
 	SIGTSTP,
 	SIGTTIN,
 	SIGTTOU,
@@ -43,10 +40,8 @@ pub enum _Signalstopper {
 	SIGPROF,
 	SIGWINCH,
 	SIGIO,
-	SIGPOLL,
 	SIGPWR,
 	SIGSYS,
-	SIGUNUSED,
 }
 
 impl _Signalstopper {
@@ -58,19 +53,19 @@ impl _Signalstopper {
 			libc::SIGILL => Some(_Signalstopper::SIGILL),
 			libc::SIGTRAP => Some(_Signalstopper::SIGTRAP),
 			libc::SIGABRT => Some(_Signalstopper::SIGABRT),
-			libc::SIGIOT => Some(_Signalstopper::SIGIOT),
 			libc::SIGBUS => Some(_Signalstopper::SIGBUS),
 			libc::SIGFPE => Some(_Signalstopper::SIGFPE),
-			libc::SIGKILL => Some(_Signalstopper::SIGKILL),
+			// libc::SIGKILL => Some(_Signalstopper::SIGKILL),
 			libc::SIGUSR1 => Some(_Signalstopper::SIGUSR1),
 			libc::SIGSEGV => Some(_Signalstopper::SIGSEGV),
 			libc::SIGUSR2 => Some(_Signalstopper::SIGUSR2),
 			libc::SIGPIPE => Some(_Signalstopper::SIGPIPE),
 			libc::SIGALRM => Some(_Signalstopper::SIGALRM),
 			libc::SIGTERM => Some(_Signalstopper::SIGTERM),
+			// libc::SIGSTKFLT => Some(_Signalstopper::SIGSTKFLT),
 			libc::SIGCHLD => Some(_Signalstopper::SIGCHLD),
 			libc::SIGCONT => Some(_Signalstopper::SIGCONT),
-			libc::SIGSTOP => Some(_Signalstopper::SIGSTOP),
+			// libc::SIGSTOP => Some(_Signalstopper::SIGSTOP),
 			libc::SIGTSTP => Some(_Signalstopper::SIGTSTP),
 			libc::SIGTTIN => Some(_Signalstopper::SIGTTIN),
 			libc::SIGTTOU => Some(_Signalstopper::SIGTTOU),
@@ -81,6 +76,7 @@ impl _Signalstopper {
 			libc::SIGPROF => Some(_Signalstopper::SIGPROF),
 			libc::SIGWINCH => Some(_Signalstopper::SIGWINCH),
 			libc::SIGIO => Some(_Signalstopper::SIGIO),
+			// libc::SIGPWR => Some(_Signalstopper::SIGPWR),
 			libc::SIGSYS => Some(_Signalstopper::SIGSYS),
 			_ => None,
 		}
@@ -106,14 +102,14 @@ pub struct ProgramConfig2 {
 	pub num_processes: u32,                          // process to start and keep running
 	pub autostart: bool,                             // launch program at start of taskmaster
 	pub restart_policy: _Restart,                    // always|never|unexpected exit
-	pub expected_error_codes: Option<Vec<u32>>,      // normal exit codes				 // dire a stop si on doit relaunch ou pas.
-	pub minimum_runtime: Option<u64>,                // minimum time to consider the program "successfully started"
-	pub max_relauch_retry: u32,                      // how many restart before abortting
-	pub stop_signal: Option<_Signalstopper>,         // signal used to stop the program
-	pub time_after_proper_stop: Option<u64>,         // time to wait before killing the program if stop signal didn't work
-	pub redirect: Option<Redirect>,                  // redirect stdout/stderr to file or to trash if None
+	pub expected_error_codes: Option<Vec<u32>>,      // normal exit codes
+	pub minimum_runtime: Option<u64>, // minimum time to consider the program "successfully started"
+	pub max_relauch_retry: u32,       // how many restart before abortting
+	pub stop_signal: Option<_Signalstopper>, // signal used to stop the program
+	pub time_after_proper_stop: Option<u64>, // time to wait before killing the program if stop signal didn't work
+	pub redirect: Option<Redirect>,          // redirect stdout/stderr to file or to trash if None
 	pub env_to_set: Option<HashMap<String, String>>, // env var to set
-	pub working_dir: Option<String>,                 // working directory to set
+	pub working_dir: Option<String>,         // working directory to set
 	#[serde(default, deserialize_with = "deserialize_umask")]
 	pub umask: Option<u16>, // umask to set before starting
 }
@@ -143,7 +139,6 @@ impl PartialEq for Program {
 #[derive(Debug)]
 pub struct Taskmaster {
 	pub programs: Vec<Program>,
-	pub config_file: String,
 }
 
 /// custom deserializer for umask option
@@ -162,7 +157,9 @@ where
 	match Option::<UmaskConfig>::deserialize(deserializer)? {
 		Some(UmaskConfig::Str(s)) => {
 			let clean_s = s.trim_start_matches("0o");
-			u16::from_str_radix(clean_s, 8).map(Some).map_err(Error::custom)
+			u16::from_str_radix(clean_s, 8)
+				.map(Some)
+				.map_err(Error::custom)
 		}
 		Some(UmaskConfig::Int(i)) => Ok(Some(i)),
 		None => Ok(None),

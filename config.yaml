@@ -24,30 +24,31 @@ programs:
     restart_policy: "UnexpectedExits"
     expected_error_codes:
       - 0
-      - 2
+      - 3
     minimum_runtime: 5
     max_relauch_retry: 4
-    stop_signal: SIGINT
     time_after_proper_stop: 10
     redirect:
-      stdout: "ping1_stdout.txt"
-      stderr: "ping1_stderr.txt"
+      stdout: "ping2_stdout.txt"
+      stderr: "ping2_stderr.txt"
     env_to_set:
       chien: "chat"
     umask: 022
-  env2:
-    cmd: "./testprogs/return_code/return_code"
+  cwd:
+    cmd: "./testprogs/cwd/main"
     num_processes: 1
-    autostart: false
+    autostart: true
     restart_policy: "UnexpectedExits"
     expected_error_codes:
       - 0
-      - 1
+      - 3
     minimum_runtime: 5
     max_relauch_retry: 4
-    stop_signal: SIGINT
     time_after_proper_stop: 10
     redirect:
-      stdout: "env2_stdout.txt"
-      stderr: "env2_stderr.txt"
+      stdout: "cwd_stdout.txt"
+      stderr: "cwd_stderr.txt"
+    env_to_set:
+      chien: "chat"
+    working_dir: "/tmp"
     umask: 022
